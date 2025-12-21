@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "llm-test-generation"
+version = "0.1.0"
+description = "LLM-based test case generation and evaluation"
+requires-python = ">=3.8"
+dependencies = [
+    "pytest>=7.0.0",
+    "coverage>=7.0.0",
+    "mutmut>=2.4.0",
+    "pandas>=1.5.0",
+]
+
+[project.optional-dependencies]
+dev = []
+
+[tool.pytest.ini_options]
+testpaths = ["tests_generated"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+
