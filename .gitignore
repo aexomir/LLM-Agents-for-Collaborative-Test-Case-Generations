@@ -2,3 +2,12 @@
 impl/README.md
 Icon
 logo.png
+
+# Python cache files
+__pycache__/
+*/__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
