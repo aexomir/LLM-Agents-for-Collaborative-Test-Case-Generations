@@ -1,0 +1,20 @@
+Generate pytest test cases for the following Python function:
+
+{code_under_test}
+
+Requirements:
+- Use pytest conventions (test_ prefix)
+- Include edge cases
+- Test both positive and negative cases
+- Add docstrings to test functions
+- Import necessary modules and the function under test
+- Ensure tests are valid Python code that can be executed with pytest
+
+Generate comprehensive test cases that cover:
+1. Normal/typical use cases
+2. Edge cases (empty inputs, boundary values, None values)
+3. Error cases (invalid inputs, exceptions)
+4. Different data types and combinations
+
+Output only valid Python code starting with necessary imports, followed by test functions.
+
