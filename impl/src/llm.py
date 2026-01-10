@@ -21,7 +21,7 @@ def call_local_llm(
             "requests library is required. Install it with: pip install requests"
         )
     
-    model = model or os.getenv("OLLAMA_MODEL", "gemma3:4b")
+    model = model or os.getenv("OLLAMA_MODEL", "llama3.2:1b")
     api_url = api_url or os.getenv(
         "OLLAMA_API_URL", "http://localhost:11434/api/generate"
     )
@@ -64,8 +64,24 @@ def call_local_llm(
             f"The model might be too slow or the prompt too large."
         )
     except requests.exceptions.HTTPError as e:
-        raise ValueError(
+        # Try to get available models for better error message
+        available_models = []
+        try:
+            base_url = api_url.replace("/api/generate", "")
+            models_response = requests.get(f"{base_url}/api/tags", timeout=5)
+            if models_response.status_code == 200:
+                models_data = models_response.json()
+                available_models = [m.get("name", "") for m in models_data.get("models", [])]
+        except Exception:
+            pass  # Ignore errors when fetching available models
+        
+        error_msg = (
             f"LLM API returned an error: {e}. "
             f"Check that the model '{model}' is available."
         )
+        if available_models:
+            error_msg += f"\nAvailable models: {', '.join(available_models)}"
+            error_msg += f"\nSet OLLAMA_MODEL environment variable or pull the model: ollama pull {model}"
+        
+        raise ValueError(error_msg)
 
