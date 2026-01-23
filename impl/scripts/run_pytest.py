@@ -24,21 +24,74 @@ def run_pytest(
         
     Returns:
         Exit code from pytest (0 for success, non-zero for failure).
-        
-    TODO:
-        - Add cut_module_path to PYTHONPATH or sys.path
-        - Construct pytest command with appropriate flags
-        - Run pytest as subprocess
-        - Capture and save output if output_file specified
-        - Return exit code
     """
-    # TODO: Implement pytest execution
-    print(f"TODO: Run pytest on {test_dir}")
+    import os
+    
+    # Validate test directory exists
+    if not test_dir.exists():
+        print(f"Error: Test directory does not exist: {test_dir}")
+        return 1
+    
+    # Prepare environment with CUT module path
+    env = os.environ.copy()
     if cut_module_path:
-        print(f"  with CUT module: {cut_module_path}")
-    if output_file:
-        print(f"  output to: {output_file}")
-    return 0
+        cut_module_path = cut_module_path.resolve()
+        pythonpath = env.get('PYTHONPATH', '')
+        if pythonpath:
+            env['PYTHONPATH'] = f"{cut_module_path}:{pythonpath}"
+        else:
+            env['PYTHONPATH'] = str(cut_module_path)
+        print(f"Added to PYTHONPATH: {cut_module_path}")
+    
+    # Construct pytest command
+    pytest_cmd = ["pytest", str(test_dir)]
+    
+    if verbose:
+        pytest_cmd.append("-v")
+    
+    # Add additional useful flags
+    pytest_cmd.extend([
+        "--tb=short",  # Short traceback format
+        "-ra",  # Show summary of all test outcomes
+    ])
+    
+    print(f"Running: {' '.join(pytest_cmd)}")
+    
+    # Run pytest and capture output
+    try:
+        result = subprocess.run(
+            pytest_cmd,
+            env=env,
+            capture_output=True,
+            text=True,
+        )
+        
+        # Combine stdout and stderr
+        output = result.stdout
+        if result.stderr:
+            output += "\n" + result.stderr
+        
+        # Print output to console
+        print(output)
+        
+        # Save output to file if specified
+        if output_file:
+            output_file.parent.mkdir(parents=True, exist_ok=True)
+            with open(output_file, 'w') as f:
+                f.write(f"Command: {' '.join(pytest_cmd)}\n")
+                f.write(f"Exit code: {result.returncode}\n")
+                f.write("=" * 80 + "\n")
+                f.write(output)
+            print(f"✓ Saved pytest output to: {output_file}")
+        
+        return result.returncode
+        
+    except FileNotFoundError:
+        print("Error: pytest not found. Install it with: pip install pytest")
+        return 127
+    except Exception as e:
+        print(f"Error running pytest: {e}")
+        return 1
 
 
 def main():
