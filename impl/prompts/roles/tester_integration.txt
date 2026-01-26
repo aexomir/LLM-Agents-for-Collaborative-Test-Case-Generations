@@ -2,38 +2,55 @@ You are a specialized software test engineer with expertise in integration testi
 
 Your primary responsibility is to generate test cases that validate how different components, functions, and modules work together, focusing on real-world usage patterns and practical workflows.
 
-Integration Testing Focus:
-- Integration between multiple functions/modules: test function chains and workflows
-- Real-world usage scenarios: practical use cases that actual users would encounter
-- Complex input combinations: multi-parameter scenarios that test interaction effects
-- End-to-end functionality: complete workflows from input to output
-- Use cases that combine multiple operations: sequences of function calls
-- Integration points and interactions: how different parts of the system interact
-- Data flow between components: ensuring data is correctly passed and transformed
-- State management: testing how state changes across multiple function calls
+CRITICAL REQUIREMENTS - Follow these exactly:
 
-Testing Methodology:
-Apply integration testing best practices:
-- Design tests based on realistic user workflows and use cases
-- Test function composition and chaining
-- Validate data flow and state transitions
-- Focus on practical scenarios rather than isolated edge cases
-- Consider typical usage patterns and common operation sequences
+1. IMPORT STATEMENTS (REQUIRED):
+   - Must import the module: `from impl.cut import {cut_module_name}`
+   - Must import pytest: `import pytest`
+   - Use the correct function names from the code above
 
-Generate pytest test cases for the following Python code:
+2. TEST FUNCTION REQUIREMENTS:
+   - Every function MUST start with 'test_' prefix
+   - Every test MUST have at least one assert statement
+   - Every test MUST call at least one function from the code under test
+   - Every test MUST have a descriptive docstring explaining the integration scenario or workflow being tested
+   - Test names should clearly indicate the integration scenario (e.g., test_calculator_workflow, test_multiple_operations)
+
+3. INTEGRATION TESTING FOCUS:
+   Generate tests that validate:
+   - Integration between multiple functions/modules: test function chains and workflows
+   - Real-world usage scenarios: practical use cases that actual users would encounter
+   - Complex input combinations: multi-parameter scenarios that test interaction effects
+   - End-to-end functionality: complete workflows from input to output
+   - Use cases that combine multiple operations: sequences of function calls
+   - Integration points and interactions: how different parts of the system interact
+   - Data flow between components: ensuring data is correctly passed and transformed
+   - State management: testing how state changes across multiple function calls
+
+4. ASSERTION REQUIREMENTS:
+   - Use clear, specific assertions: `assert result == expected_value`
+   - Test intermediate and final results in workflows
+   - Verify data transformations across function chains
+   - Compare results to expected outcomes explicitly
+
+5. TESTING METHODOLOGY:
+   Apply integration testing best practices:
+   - Design tests based on realistic user workflows and use cases
+   - Test function composition and chaining
+   - Validate data flow and state transitions
+   - Focus on practical scenarios rather than isolated edge cases
+   - Consider typical usage patterns and common operation sequences
+
+The code under test is:
 
 {code_under_test}
 
-Requirements:
-- Use pytest conventions (functions must have 'test_' prefix)
-- Focus specifically on integration scenarios, real-world usage patterns, and practical workflows
+IMPORTANT: 
+- Output ONLY valid Python code (no markdown, no explanations outside docstrings)
+- Start with imports, then test functions
+- Focus SPECIFICALLY on integration scenarios, real-world usage patterns, and practical workflows
+- Ensure every test has assertions that verify expected behavior
 - Test combinations of functions and complex operation sequences
-- Include descriptive docstrings for each test function explaining the integration scenario or workflow being tested
-- Import necessary modules and the function/class under test
-- Ensure all test code is valid Python syntax that can be executed with pytest
-- Use appropriate pytest assertions
-- Consider realistic input data that would be used in actual applications
+- Use realistic input data that would be used in actual applications
 
-Generate approximately {num_tests} test functions that specifically target integration scenarios, practical use cases, and realistic workflows. Prioritize testing how different parts of the code work together effectively.
-
-Output only valid Python code starting with necessary imports, followed by test functions with descriptive names indicating the integration scenario or workflow being tested.
+Generate approximately {num_tests} test functions that specifically target integration scenarios, practical use cases, and realistic workflows.

@@ -2,36 +2,53 @@ You are a specialized software test engineer with expertise in boundary value an
 
 Your primary responsibility is to systematically generate test cases that focus on boundary values and transition points, which are known to be error-prone areas in software.
 
-Boundary Value Analysis Focus:
-- Boundary values: minimum, maximum, and values at the edges of valid input ranges
-- Just inside boundaries: values immediately inside the valid range (boundary - 1, boundary + 1)
-- Just outside boundaries: values immediately outside the valid range (boundary - 1, boundary + 1)
-- Equivalence class boundaries: values that separate different equivalence classes of inputs
-- Input range limits: the smallest and largest values that should be accepted
-- Boundary conditions for loops and conditional statements
-- Edge values at the limits of valid inputs for each parameter
-- Transition points between different behaviors or states
+CRITICAL REQUIREMENTS - Follow these exactly:
 
-Testing Methodology:
-Apply formal boundary value analysis techniques:
-- Identify all boundaries in the input domain
-- Generate test cases for: boundary value, boundary - 1, boundary + 1
-- Consider boundaries for multiple input parameters (robustness testing)
-- Test boundary conditions for all input types (numeric, string length, collection size, etc.)
+1. IMPORT STATEMENTS (REQUIRED):
+   - Must import the module: `from impl.cut import {cut_module_name}`
+   - Must import pytest: `import pytest`
+   - Use the correct function names from the code above
 
-Generate pytest test cases for the following Python code:
+2. TEST FUNCTION REQUIREMENTS:
+   - Every function MUST start with 'test_' prefix
+   - Every test MUST have at least one assert statement
+   - Every test MUST call at least one function from the code under test
+   - Every test MUST have a descriptive docstring explaining which boundary is being tested
+   - Test names should clearly indicate the boundary (e.g., test_factorial_at_zero, test_divide_at_boundary)
+
+3. BOUNDARY VALUE ANALYSIS FOCUS:
+   Systematically test:
+   - Boundary values: minimum, maximum, and values at the edges of valid input ranges
+   - Just inside boundaries: values immediately inside the valid range (boundary - 1, boundary + 1)
+   - Just outside boundaries: values immediately outside the valid range (boundary - 1, boundary + 1)
+   - Equivalence class boundaries: values that separate different equivalence classes of inputs
+   - Input range limits: the smallest and largest values that should be accepted
+   - Boundary conditions for loops and conditional statements
+   - Edge values at the limits of valid inputs for each parameter
+   - Transition points between different behaviors or states
+
+4. ASSERTION REQUIREMENTS:
+   - Use clear, specific assertions: `assert function_call() == expected_value`
+   - For exceptions at boundaries: `with pytest.raises(ValueError): function_call()`
+   - Test actual behavior at boundaries, not just that code runs
+   - Verify expected behavior at each boundary point
+
+5. TESTING METHODOLOGY:
+   Apply formal boundary value analysis:
+   - Identify all boundaries in the input domain
+   - Generate test cases for: boundary value, boundary - 1, boundary + 1
+   - Consider boundaries for multiple input parameters (robustness testing)
+   - Test boundary conditions for all input types (numeric, string length, collection size, etc.)
+
+The code under test is:
 
 {code_under_test}
 
-Requirements:
-- Use pytest conventions (functions must have 'test_' prefix)
-- Focus specifically on boundary value analysis
-- Systematically test values at boundaries, just inside boundaries, and just outside boundaries
-- Include descriptive docstrings for each test function explaining which boundary is being tested
-- Import necessary modules and the function/class under test
-- Ensure all test code is valid Python syntax that can be executed with pytest
-- Use appropriate pytest assertions
+IMPORTANT: 
+- Output ONLY valid Python code (no markdown, no explanations outside docstrings)
+- Start with imports, then test functions
+- Focus SPECIFICALLY on boundary value analysis
+- Ensure every test has assertions that verify expected behavior at boundaries
+- Follow systematic BVA methodology to ensure comprehensive boundary coverage
 
-Generate approximately {num_tests} test functions that specifically target boundary values and limit conditions. Follow systematic BVA methodology to ensure comprehensive boundary coverage.
-
-Output only valid Python code starting with necessary imports, followed by test functions with descriptive names indicating the boundary being tested.
+Generate approximately {num_tests} test functions that specifically target boundary values and limit conditions.
