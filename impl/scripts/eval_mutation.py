@@ -50,7 +50,11 @@ def eval_mutation(
     
     # Prepare environment
     env = os.environ.copy()
+    # Make sure project root is on PYTHONPATH so tests can import impl.*
     env['PYTHONPATH'] = str(impl_dir.parent)
+    # Tell mutmut to only run the single-agent tests, not the whole tests_generated tree
+    # This avoids pytest picking up collab/competitive test_calculator.py files.
+    env['MUTMUT_TEST_COMMAND'] = f"pytest {test_dir} -q"
     
     # Create a temporary directory for mutmut cache
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -58,12 +62,11 @@ def eval_mutation(
         env['MUTMUT_CACHE_DIR'] = str(cache_dir)
         
         # Run mutmut
-        # First, clear any existing mutmut cache
+        # We rely on MUTMUT_TEST_COMMAND to define the pytest command,
+        # so we don't pass --runner/--tests-dir here to avoid conflicts.
         mutmut_run_cmd = [
             "mutmut", "run",
             "--paths-to-mutate", str(mutation_target),
-            "--tests-dir", str(test_dir),
-            "--runner", "pytest",
             "--no-progress",  # Disable progress bar for cleaner output
         ]
         
@@ -76,7 +79,7 @@ def eval_mutation(
                 env=env,
                 capture_output=True,
                 text=True,
-                cwd=impl_dir.parent,
+                cwd=impl_dir,
                 timeout=300,  # 5 minute timeout
             )
             
@@ -91,7 +94,7 @@ def eval_mutation(
                 env=env,
                 capture_output=True,
                 text=True,
-                cwd=impl_dir.parent,
+                cwd=impl_dir,
             )
             
             # Parse mutmut results
@@ -107,13 +110,24 @@ def eval_mutation(
             output = results_result.stdout
             print(output)
             
-            # Parse results using regex
-            # Format: "Killed: X" or similar
-            killed_match = re.search(r'Killed:\s*(\d+)', output, re.IGNORECASE)
-            survived_match = re.search(r'Survived:\s*(\d+)', output, re.IGNORECASE)
-            timeout_match = re.search(r'Timeout:\s*(\d+)', output, re.IGNORECASE)
-            suspicious_match = re.search(r'Suspicious:\s*(\d+)', output, re.IGNORECASE)
-            skipped_match = re.search(r'Skipped:\s*(\d+)', output, re.IGNORECASE)
+            # Parse results using regex.
+            # Support both older "Label: X" format and newer
+            # "Label 🙁 (X)" style lines that mutmut prints.
+            killed_match = re.search(
+                r'Killed(?:\s*[^\d(]+)?[:(]\s*(\d+)', output, re.IGNORECASE
+            )
+            survived_match = re.search(
+                r'Survived(?:\s*[^\d(]+)?[:(]\s*(\d+)', output, re.IGNORECASE
+            )
+            timeout_match = re.search(
+                r'Timeout(?:\s*[^\d(]+)?[:(]\s*(\d+)', output, re.IGNORECASE
+            )
+            suspicious_match = re.search(
+                r'Suspicious(?:\s*[^\d(]+)?[:(]\s*(\d+)', output, re.IGNORECASE
+            )
+            skipped_match = re.search(
+                r'Skipped(?:\s*[^\d(]+)?[:(]\s*(\d+)', output, re.IGNORECASE
+            )
             
             if killed_match:
                 metrics["killed"] = int(killed_match.group(1))

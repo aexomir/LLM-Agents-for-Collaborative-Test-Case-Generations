@@ -203,7 +203,7 @@ def generate_single_tests(
         print("Warning: Generated code validation failed, but saving anyway...")
         print(f"Error: {message}")
     
-    # Save generated test file
+    # Save generated test file under tests_generated
     test_filename = f"test_{cut_module}.py"
     test_file_path = output_dir / test_filename
     
@@ -218,6 +218,21 @@ def generate_single_tests(
     
     print(f"✓ Saved generated tests to: {test_file_path}")
     print(f"  File size: {len(test_code)} characters")
+
+    # Also create/overwrite a wrapper file in impl/tests so tools like
+    # pytest and mutmut can discover this suite automatically.
+    tests_dir = output_dir.parent.parent / "tests"
+    tests_dir.mkdir(parents=True, exist_ok=True)
+    wrapper_path = tests_dir / f"test_{cut_module}_single.py"
+    wrapper_code = (
+        "\"\"\"Auto-generated wrapper for single-agent tests.\n"
+        "Imports the generated tests so pytest/mutmut see them under 'tests/'.\n"
+        "\"\"\"\n\n"
+        f"from tests_generated.single.test_{cut_module} import *  # noqa: F401,F403\n"
+    )
+    with open(wrapper_path, "w") as f:
+        f.write(wrapper_code)
+    print(f"✓ Created test wrapper: {wrapper_path}")
 
 
 def main():

@@ -554,7 +554,7 @@ def generate_competitive_tests(
         print("Warning: Combined code validation failed, but saving anyway...")
         print(f"Error details: {message}")
     
-    # Save generated test file
+    # Save generated test file under tests_generated/competitive
     test_filename = f"test_{cut_module}.py"
     test_file_path = output_dir / test_filename
     
@@ -568,6 +568,21 @@ def generate_competitive_tests(
     print(f"  File size: {len(final_test_code)} characters")
     print(f"  Total unique test functions: {len(unique_test_functions)}")
     print(f"  Competition mode: {competition_mode}")
+
+    # Also create/overwrite a wrapper file in impl/tests so tools like
+    # pytest and mutmut can discover this competitive suite automatically.
+    tests_dir = output_dir.parent.parent / "tests"
+    tests_dir.mkdir(parents=True, exist_ok=True)
+    wrapper_path = tests_dir / f"test_{cut_module}_competitive.py"
+    wrapper_code = (
+        "\"\"\"Auto-generated wrapper for competitive tests.\n"
+        "Imports the generated tests so pytest/mutmut see them under 'tests/'.\n"
+        "\"\"\"\n\n"
+        f"from tests_generated.competitive.test_{cut_module} import *  # noqa: F401,F403\n"
+    )
+    with open(wrapper_path, "w", encoding="utf-8") as f:
+        f.write(wrapper_code)
+    print(f"[OK] Created competitive test wrapper: {wrapper_path}")
 
 
 def main():

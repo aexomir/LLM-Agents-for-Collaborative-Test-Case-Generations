@@ -1,0 +1,5 @@
+file,cut,mode,metric_type,mutation_score,mutation_killed,mutation_survived,mutation_timeout,mutation_suspicious,mutation_skipped
+mutation_calculator_collab.json,calculator,collab,mutation,0.0,0,18,0,0,0
+mutation_calculator_competitive.json,calculator,competitive,mutation,0.0,0,18,0,0,0
+mutation_calculator_single.json,calculator,single,mutation,0.0,0,18,0,0,0
+mutation_calculator.json,calculator,unknown,mutation,0.0,0,0,0,0,0

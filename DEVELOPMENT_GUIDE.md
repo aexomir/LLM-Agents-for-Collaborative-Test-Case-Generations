@@ -188,12 +188,12 @@ The implementation follows this workflow:
 
 **Status:** ✅ COMPLETED
 
-**What needs to be done:**
+**What was done:**
 
-- Implement `run_pytest()` in `impl/scripts/run_pytest.py`
-- Implement `eval_coverage()` in `impl/scripts/eval_coverage.py`
-- Implement `eval_mutation()` in `impl/scripts/eval_mutation.py`
-- Implement `eval_diversity()` in `impl/scripts/eval_diversity.py`
+- Implemented `run_pytest()` in `impl/scripts/run_pytest.py`
+- Implemented `eval_coverage()` in `impl/scripts/eval_coverage.py`
+- Implemented `eval_mutation()` in `impl/scripts/eval_mutation.py`
+- Implemented `eval_diversity()` in `impl/scripts/eval_diversity.py`
 
 **Manual steps:**
 
@@ -231,14 +231,14 @@ The implementation follows this workflow:
 
 **Branch:** `feature/result-aggregation`
 
-**Status:** ⏳ PENDING
+**Status:** ✅ DONE
 
-**What needs to be done:**
+**What was done:**
 
-- Implement `aggregate_results()` in `impl/scripts/aggregate.py`
-- Parse results from all evaluation scripts
-- Generate comparison tables
-- Export in multiple formats (CSV, JSON, HTML)
+- Implemented `aggregate_results()` in `impl/scripts/aggregate.py`
+- Parsed results from all evaluation scripts
+- Generated comparison tables / summary rows using pandas
+- Exported in multiple formats (CSV, JSON, HTML)
 
 **Manual steps:**
 
