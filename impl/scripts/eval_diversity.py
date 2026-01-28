@@ -9,6 +9,8 @@ from pathlib import Path
 from typing import List, Set, Dict, Any
 import sys
 
+from impl.scripts.test_run_utils import get_run_id_from_path
+
 
 class TestFunctionAnalyzer(ast.NodeVisitor):
     """AST visitor to analyze test function characteristics."""
@@ -210,6 +212,9 @@ def eval_diversity(
     
     print(f"Found {len(all_tests)} test function(s)")
     
+    # Extract run ID from test directory
+    run_id = get_run_id_from_path(test_dir)
+    
     # Calculate diversity based on metric type
     if diversity_metric == "syntactic":
         metrics = calculate_syntactic_diversity(all_tests)
@@ -236,6 +241,10 @@ def eval_diversity(
     else:
         print(f"Error: Unknown diversity metric: {diversity_metric}")
         return {"diversity_score": 0.0, "unique_patterns": 0, "error": "Unknown metric"}
+    
+    # Add run ID to metrics if found
+    if run_id:
+        metrics["run_id"] = run_id
     
     # Save results if output file specified
     if output_file:

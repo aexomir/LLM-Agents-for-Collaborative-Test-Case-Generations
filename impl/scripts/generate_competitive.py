@@ -37,7 +37,13 @@ import sys
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from impl.src.llm import call_local_llm
+from impl.src.llm import call_llm
+import os
+from impl.scripts.test_run_utils import (
+    create_timestamped_output_dir,
+    save_run_metadata,
+)
+from impl.scripts.test_quality_validator import TestQualityValidator
 
 
 def load_cut_module(cut_module_name: str):
@@ -356,7 +362,8 @@ def generate_competitive_tests(
     num_tests: int = 10,
     competition_mode: str = "adversarial",
     max_iterations: int = 2,
-) -> None:
+    use_timestamp: bool = True,
+) -> Tuple[Path, str]:
     """
     Generate test cases using competitive/adversarial agents.
     
@@ -383,11 +390,15 @@ def generate_competitive_tests(
     
     Args:
         cut_module: Name of the module in impl/cut/ to test (without .py extension)
-        output_dir: Directory to save generated test files
+        output_dir: Base directory to save generated test files
         num_agents: Number of competing agents (default: 2, minimum: 2)
         num_tests: Target number of test cases to generate per agent
         competition_mode: Mode of competition ('adversarial', 'diversity', 'coverage')
         max_iterations: Maximum number of competitive iterations (default: 2, reserved for future use)
+        use_timestamp: If True, create timestamped subdirectory. If False, use output_dir directly.
+        
+    Returns:
+        Tuple of (actual_output_directory, run_id)
         
     Raises:
         ValueError: If no valid test functions are generated or parameters are invalid
@@ -405,8 +416,16 @@ def generate_competitive_tests(
     
     print(f"Generating competitive tests with {num_agents} agent(s) in '{competition_mode}' mode for module '{cut_module}'...")
     
-    # Create output directory
-    output_dir.mkdir(parents=True, exist_ok=True)
+    # Create timestamped output directory if requested
+    if use_timestamp:
+        base_dir = output_dir.parent if output_dir.name == "competitive" else output_dir.parent.parent
+        actual_output_dir, run_id = create_timestamped_output_dir(base_dir, "competitive")
+        print(f"Created timestamped directory: {actual_output_dir}")
+        print(f"Run ID: {run_id}")
+    else:
+        actual_output_dir = output_dir
+        run_id = None
+        actual_output_dir.mkdir(parents=True, exist_ok=True)
     
     # Load CUT module
     print(f"Loading CUT module: impl.cut.{cut_module}")
@@ -423,6 +442,11 @@ def generate_competitive_tests(
     except ValueError as e:
         print(f"Error: {e}")
         raise
+    
+    # Get CUT module path for quality validation
+    impl_dir = Path(__file__).parent.parent
+    cut_module_path = impl_dir / "cut" / f"{cut_module}.py"
+    quality_validator = TestQualityValidator(cut_module, cut_module_path)
     
     # Load competitive template
     try:
@@ -448,19 +472,37 @@ def generate_competitive_tests(
     # Agent 1: Generate initial tests
     print(f"\n--- Agent 1: Initial Test Generation ---")
     try:
-        prompt = initial_template.format(code_under_test=code_under_test)
-        prompt += f"\n\nGenerate approximately {num_tests} test functions."
+        try:
+            prompt = initial_template.format(
+                code_under_test=code_under_test,
+                cut_module_name=cut_module,
+                num_tests=num_tests
+            )
+        except KeyError:
+            # Fallback for old template format
+            prompt = initial_template.format(code_under_test=code_under_test)
+            prompt += f"\n\nGenerate approximately {num_tests} test functions."
         
-        print("Calling LLM for Agent 1...")
-        response = call_local_llm(
+        provider = os.getenv("LLM_PROVIDER", "local" if not os.getenv("OPENAI_API_KEY") else "openai")
+        print(f"Calling LLM for Agent 1 (provider: {provider})...")
+        response = call_llm(
             prompt=prompt,
+            provider=provider,
             temperature=0.7,
             max_tokens=4000,
         )
         
         test_code = extract_python_code_from_response(response)
         is_valid, message = validate_test_code(test_code)
-        print(f"Agent 1 validation: {message}")
+        print(f"Agent 1 syntax validation: {message}")
+        
+        if is_valid:
+            # Quality validation
+            quality_valid, quality_warnings, quality_metrics = quality_validator.validate_test_quality(
+                test_code, strict=False
+            )
+            quality_score = quality_metrics.get("quality_percentage", 0.0)
+            print(f"Agent 1 quality score: {quality_score:.1f}%")
         
         if is_valid:
             test_funcs = extract_test_functions(test_code)
@@ -486,22 +528,41 @@ def generate_competitive_tests(
     existing_tests_str = format_existing_tests(all_test_functions)
     
     try:
-        prompt = competitive_template.format(
-            code_under_test=code_under_test,
-            existing_tests=existing_tests_str,
-            num_tests=num_tests
-        )
+        try:
+            prompt = competitive_template.format(
+                code_under_test=code_under_test,
+                cut_module_name=cut_module,
+                existing_tests=existing_tests_str,
+                num_tests=num_tests
+            )
+        except KeyError:
+            # Fallback for old template format
+            prompt = competitive_template.format(
+                code_under_test=code_under_test,
+                existing_tests=existing_tests_str,
+                num_tests=num_tests
+            )
         
-        print("Calling LLM for Agent 2...")
-        response = call_local_llm(
+        provider = os.getenv("LLM_PROVIDER", "local" if not os.getenv("OPENAI_API_KEY") else "openai")
+        print(f"Calling LLM for Agent 2 (provider: {provider})...")
+        response = call_llm(
             prompt=prompt,
+            provider=provider,
             temperature=0.7,
             max_tokens=4000,
         )
         
         test_code = extract_python_code_from_response(response)
         is_valid, message = validate_test_code(test_code)
-        print(f"Agent 2 validation: {message}")
+        print(f"Agent 2 syntax validation: {message}")
+        
+        if is_valid:
+            # Quality validation
+            quality_valid, quality_warnings, quality_metrics = quality_validator.validate_test_quality(
+                test_code, strict=False
+            )
+            quality_score = quality_metrics.get("quality_percentage", 0.0)
+            print(f"Agent 2 quality score: {quality_score:.1f}%")
         
         if is_valid:
             test_funcs = extract_test_functions(test_code)
@@ -548,7 +609,22 @@ def generate_competitive_tests(
     # Validate the combined code
     print("\nValidating combined test code...")
     is_valid, message = validate_test_code(final_test_code)
-    print(f"Combined code validation: {message}")
+    print(f"Combined code syntax validation: {message}")
+    
+    # Quality validation of combined code
+    quality_valid, quality_warnings, quality_metrics = quality_validator.validate_test_quality(
+        final_test_code, strict=False
+    )
+    quality_score = quality_metrics.get("quality_percentage", 0.0)
+    print(f"Combined code quality score: {quality_score:.1f}%")
+    print(f"  Test functions: {quality_metrics.get('num_test_functions', 0)}")
+    print(f"  Assertions: {quality_metrics.get('num_assertions', 0)}")
+    print(f"  Functions tested: {len(quality_metrics.get('functions_tested', []))}")
+    
+    if quality_warnings:
+        print(f"\nQuality warnings ({len(quality_warnings)}):")
+        for warning in quality_warnings[:5]:
+            print(f"  - {warning}")
     
     if not is_valid:
         print("Warning: Combined code validation failed, but saving anyway...")
@@ -556,7 +632,7 @@ def generate_competitive_tests(
     
     # Save generated test file under tests_generated/competitive
     test_filename = f"test_{cut_module}.py"
-    test_file_path = output_dir / test_filename
+    test_file_path = actual_output_dir / test_filename
     
     try:
         with open(test_file_path, 'w', encoding='utf-8') as f:
@@ -568,21 +644,47 @@ def generate_competitive_tests(
     print(f"  File size: {len(final_test_code)} characters")
     print(f"  Total unique test functions: {len(unique_test_functions)}")
     print(f"  Competition mode: {competition_mode}")
+    
+    # Save run metadata
+    if run_id:
+        metadata_file = save_run_metadata(
+            actual_output_dir,
+            run_id,
+            cut_module,
+            "competitive",
+            additional_info={
+                "num_agents": num_agents,
+                "num_tests": num_tests,
+                "competition_mode": competition_mode,
+                "test_file": test_filename,
+                "unique_test_functions": len(unique_test_functions),
+            }
+        )
+        print(f"✓ Saved run metadata to: {metadata_file}")
 
     # Also create/overwrite a wrapper file in impl/tests so tools like
     # pytest and mutmut can discover this competitive suite automatically.
-    tests_dir = output_dir.parent.parent / "tests"
+    tests_dir = actual_output_dir.parent.parent / "tests"
     tests_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Create wrapper that imports from the timestamped directory
+    if run_id:
+        import_path = f"impl.tests_generated.competitive.{run_id}.test_{cut_module}"
+    else:
+        import_path = f"impl.tests_generated.competitive.test_{cut_module}"
+    
     wrapper_path = tests_dir / f"test_{cut_module}_competitive.py"
     wrapper_code = (
         "\"\"\"Auto-generated wrapper for competitive tests.\n"
         "Imports the generated tests so pytest/mutmut see them under 'tests/'.\n"
         "\"\"\"\n\n"
-        f"from tests_generated.competitive.test_{cut_module} import *  # noqa: F401,F403\n"
+        f"from {import_path} import *  # noqa: F401,F403\n"
     )
     with open(wrapper_path, "w", encoding="utf-8") as f:
         f.write(wrapper_code)
     print(f"[OK] Created competitive test wrapper: {wrapper_path}")
+    
+    return actual_output_dir, run_id or "unknown"
 
 
 def main():
@@ -605,7 +707,12 @@ def main():
         "--output-dir",
         type=Path,
         default=Path(__file__).parent.parent / "tests_generated" / "competitive",
-        help="Directory to save generated test files (default: impl/tests_generated/competitive)",
+        help="Base directory to save generated test files (will create timestamped subdirectory)",
+    )
+    parser.add_argument(
+        "--no-timestamp",
+        action="store_true",
+        help="Disable timestamped subdirectories (use output-dir directly)",
     )
     parser.add_argument(
         "--num-agents",
@@ -636,14 +743,18 @@ def main():
     args = parser.parse_args()
     
     try:
-        generate_competitive_tests(
+        output_dir, run_id = generate_competitive_tests(
             cut_module=args.cut_module,
             output_dir=args.output_dir,
             num_agents=args.num_agents,
             num_tests=args.num_tests,
             competition_mode=args.competition_mode,
             max_iterations=args.max_iterations,
+            use_timestamp=not args.no_timestamp,
         )
+        print(f"\n✓ Test generation complete!")
+        print(f"  Output directory: {output_dir}")
+        print(f"  Run ID: {run_id}")
     except (ValueError, FileNotFoundError, ImportError, IOError) as e:
         print(f"\nError: {e}", file=sys.stderr)
         sys.exit(1)

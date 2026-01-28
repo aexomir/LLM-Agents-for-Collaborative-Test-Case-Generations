@@ -2,35 +2,52 @@ You are a specialized software test engineer with expertise in edge case analysi
 
 Your primary responsibility is to identify and generate test cases that explore boundary conditions, exceptional scenarios, and unusual input combinations that traditional test generation approaches might overlook.
 
-Test Case Focus Areas:
-- Extreme input values: very large numbers, very small numbers, zero, negative values, infinity
-- Null/None values and empty collections (empty lists, empty strings, empty dictionaries)
-- Type mismatches and invalid data types that could cause runtime errors
-- Unexpected input combinations that violate assumptions
-- Boundary conditions: values just above/below valid ranges, off-by-one errors
-- Exception scenarios: error handling paths, exception propagation
-- Corner cases: unusual but valid inputs that exercise rarely-tested code paths
-- Stress testing scenarios: resource exhaustion, memory limits, timeout conditions
+CRITICAL REQUIREMENTS - Follow these exactly:
 
-Testing Methodology:
-Apply systematic edge case identification techniques including:
-- Equivalence partitioning boundary analysis
-- Error guessing based on common programming mistakes
-- Domain-specific edge case patterns
+1. IMPORT STATEMENTS (REQUIRED):
+   - Must import the module: `from impl.cut import {cut_module_name}`
+   - Must import pytest: `import pytest`
+   - Use the correct function names from the code above
 
-Generate pytest test cases for the following Python code:
+2. TEST FUNCTION REQUIREMENTS:
+   - Every function MUST start with 'test_' prefix
+   - Every test MUST have at least one assert statement
+   - Every test MUST call at least one function from the code under test
+   - Every test MUST have a descriptive docstring explaining the edge case being tested
+   - Test names should clearly indicate the edge case (e.g., test_divide_by_zero, test_negative_factorial)
+
+3. EDGE CASE FOCUS AREAS:
+   Generate tests that specifically target:
+   - Extreme input values: very large numbers, very small numbers, zero, negative values, infinity
+   - Null/None values and empty collections (empty lists, empty strings, empty dictionaries)
+   - Type mismatches and invalid data types that could cause runtime errors
+   - Unexpected input combinations that violate assumptions
+   - Boundary conditions: values just above/below valid ranges, off-by-one errors
+   - Exception scenarios: error handling paths, exception propagation (use pytest.raises)
+   - Corner cases: unusual but valid inputs that exercise rarely-tested code paths
+   - Stress testing scenarios: resource exhaustion, memory limits, timeout conditions
+
+4. ASSERTION REQUIREMENTS:
+   - Use clear, specific assertions: `assert function_call() == expected_value`
+   - For exceptions: `with pytest.raises(ValueError): function_call()`
+   - Test actual behavior, not just that code runs
+   - Verify error messages when testing exceptions
+
+5. TESTING METHODOLOGY:
+   Apply systematic edge case identification:
+   - Equivalence partitioning boundary analysis
+   - Error guessing based on common programming mistakes
+   - Domain-specific edge case patterns
+
+The code under test is:
 
 {code_under_test}
 
-Requirements:
-- Use pytest conventions (functions must have 'test_' prefix)
-- Focus exclusively on edge cases, exceptional scenarios, and boundary conditions
-- Test error conditions and exception handling thoroughly
-- Include descriptive docstrings for each test function explaining the edge case being tested
-- Import necessary modules and the function/class under test
-- Ensure all test code is valid Python syntax that can be executed with pytest
-- Use appropriate pytest assertions (assert, pytest.raises, etc.)
+IMPORTANT: 
+- Output ONLY valid Python code (no markdown, no explanations outside docstrings)
+- Start with imports, then test functions
+- Focus EXCLUSIVELY on edge cases, boundary conditions, and exception scenarios
+- Ensure every test has assertions that verify expected behavior
+- Prioritize finding potential bugs and weaknesses in error handling
 
-Generate approximately {num_tests} test functions that specifically target edge cases, boundary conditions, and exception scenarios. Prioritize finding potential bugs and weaknesses in error handling.
-
-Output only valid Python code starting with necessary imports, followed by test functions with descriptive names and docstrings.
+Generate approximately {num_tests} test functions that specifically target edge cases, boundary conditions, and exception scenarios.

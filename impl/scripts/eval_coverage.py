@@ -9,6 +9,8 @@ import subprocess
 from pathlib import Path
 import sys
 
+from impl.scripts.test_run_utils import get_run_id_from_path
+
 
 def eval_coverage(
     test_dir: Path,
@@ -48,9 +50,11 @@ def eval_coverage(
     env['PYTHONPATH'] = str(impl_dir.parent)
     
     # Run coverage with pytest
+    # Use the actual directory path for source, not module path
+    cut_dir = impl_dir / "cut"
     coverage_cmd = [
         "coverage", "run",
-        "--source", f"impl.cut.{cut_module}",
+        "--source", str(cut_dir),
         "--branch",  # Enable branch coverage
         "-m", "pytest",
         str(test_dir),
@@ -73,6 +77,10 @@ def eval_coverage(
             print(f"Warning: Coverage run returned exit code {result.returncode}")
             print(result.stdout)
             print(result.stderr)
+            # If tests failed completely, coverage data might be empty
+            if "No data to report" in result.stdout or "No data to report" in result.stderr:
+                print("ERROR: No coverage data collected. Tests may have failed to run.")
+                return {"line": 0.0, "branch": 0.0, "error": "Tests failed to run"}
         
         # Get coverage report in JSON format for parsing
         json_result = subprocess.run(
@@ -82,28 +90,40 @@ def eval_coverage(
             cwd=impl_dir.parent,
         )
         
-        metrics = {"line": 0.0, "branch": 0.0}
+        # Extract run ID from test directory
+        run_id = get_run_id_from_path(test_dir)
         
-        if json_result.returncode == 0:
+        metrics = {"line": 0.0, "branch": 0.0}
+        if run_id:
+            metrics["run_id"] = run_id
+        
+        if json_result.returncode == 0 and json_result.stdout.strip():
             try:
                 coverage_data = json.loads(json_result.stdout)
                 
-                # Extract totals
+                # Extract totals - coverage JSON format has 'totals' at root level
                 totals = coverage_data.get("totals", {})
                 
-                # Line coverage
-                num_statements = totals.get("num_statements", 0)
-                covered_lines = totals.get("covered_lines", 0)
-                if num_statements > 0:
-                    metrics["line"] = covered_lines / num_statements
+                # Line coverage - use percent_covered if available, otherwise calculate
+                if "percent_covered" in totals:
+                    metrics["line"] = totals["percent_covered"] / 100.0
+                else:
+                    # Fallback: calculate from covered_lines and num_statements
+                    num_statements = totals.get("num_statements", 0)
+                    covered_lines = totals.get("covered_lines", 0)
+                    if num_statements > 0:
+                        metrics["line"] = covered_lines / num_statements
                 
                 # Branch coverage
-                num_branches = totals.get("num_branches", 0)
-                covered_branches = totals.get("covered_branches", 0)
-                if num_branches > 0:
-                    metrics["branch"] = covered_branches / num_branches
+                if "percent_covered_branches" in totals:
+                    metrics["branch"] = totals["percent_covered_branches"] / 100.0
                 else:
-                    metrics["branch"] = None  # No branches to measure
+                    num_branches = totals.get("num_branches", 0)
+                    covered_branches = totals.get("covered_branches", 0)
+                    if num_branches > 0:
+                        metrics["branch"] = covered_branches / num_branches
+                    else:
+                        metrics["branch"] = None  # No branches to measure
                 
                 print(f"✓ Line coverage: {metrics['line']:.1%}")
                 if metrics['branch'] is not None:
@@ -113,6 +133,7 @@ def eval_coverage(
                     
             except json.JSONDecodeError as e:
                 print(f"Error parsing coverage JSON: {e}")
+                print(f"JSON output: {json_result.stdout[:500]}")
         
         # Generate report in specified format
         if output_file:
@@ -146,6 +167,26 @@ def eval_coverage(
                 with open(output_file, 'w') as f:
                     f.write(text_result.stdout)
                 print(f"✓ Saved text coverage report to: {output_file}")
+            
+            # Always save metrics as JSON for aggregation, regardless of report_format
+            # This ensures the aggregate script can find coverage results
+            if output_file.suffix != '.json':
+                json_output = output_file.with_suffix('.json')
+            else:
+                json_output = output_file
+            
+            # Only save JSON metrics if we haven't already saved JSON format
+            if report_format != "json" or json_output != output_file:
+                metrics_json = {
+                    "line": metrics.get("line", 0.0),
+                    "branch": metrics.get("branch"),
+                    "error": metrics.get("error")
+                }
+                if "run_id" in metrics:
+                    metrics_json["run_id"] = metrics["run_id"]
+                with open(json_output, 'w') as f:
+                    json.dump(metrics_json, f, indent=2)
+                print(f"✓ Saved coverage metrics JSON to: {json_output}")
         
         return metrics
         

@@ -99,9 +99,16 @@ def aggregate_results(
             "metric_type": metric_type,
         }
         
+        # Extract run_id if present
+        if "run_id" in data:
+            row["run_id"] = data.get("run_id")
+        
         if metric_type == "coverage":
             row["coverage_line"] = data.get("line")
             row["coverage_branch"] = data.get("branch")
+            # Handle error field if present
+            if "error" in data:
+                row["coverage_error"] = data.get("error")
         elif metric_type == "mutation":
             row["mutation_score"] = data.get("score")
             row["mutation_killed"] = data.get("killed")
@@ -109,6 +116,9 @@ def aggregate_results(
             row["mutation_timeout"] = data.get("timeout")
             row["mutation_suspicious"] = data.get("suspicious")
             row["mutation_skipped"] = data.get("skipped")
+            # Handle error field if present
+            if "error" in data:
+                row["mutation_error"] = data.get("error")
         elif metric_type == "diversity":
             # We don't know which diversity metric was used (syntactic/semantic/coverage),
             # so record all common fields and let the filename disambiguate.
@@ -121,6 +131,9 @@ def aggregate_results(
             row["diversity_total_values"] = data.get("total_values")
             row["diversity_edge_case_count"] = data.get("edge_case_count")
             row["diversity_total_tests"] = data.get("total_tests")
+            # Handle error field if present
+            if "error" in data:
+                row["diversity_error"] = data.get("error")
         else:
             # Unknown metrics: keep raw keys so nothing is lost
             for k, v in data.items():
@@ -130,11 +143,30 @@ def aggregate_results(
     
     if not rows:
         print(f"No JSON result files found in {results_dir}", file=sys.stderr)
+        print(f"Looking for files matching: coverage_*.json, mutation_*.json, diversity_*.json", file=sys.stderr)
         return
+    
+    # Print summary of what was found
+    metric_counts = {}
+    for row in rows:
+        metric_type = row.get("metric_type", "unknown")
+        metric_counts[metric_type] = metric_counts.get(metric_type, 0) + 1
+    
+    print(f"Found {len(rows)} result file(s):", file=sys.stderr)
+    for metric_type, count in sorted(metric_counts.items()):
+        print(f"  {metric_type}: {count} file(s)", file=sys.stderr)
     
     df = pd.DataFrame(rows)
     # Sort for a stable, readable table
-    df = df.sort_values(by=["cut", "mode", "metric_type", "file"])
+    # Include run_id in sort if it exists
+    sort_columns = ["cut", "mode", "metric_type"]
+    if "run_id" in df.columns:
+        sort_columns.insert(1, "run_id")  # Insert after cut, before mode
+    sort_columns.append("file")
+    df = df.sort_values(by=sort_columns)
+    
+    # Replace None with empty string for better CSV readability (pandas will use NaN which is fine)
+    # But for CSV output, we'll let pandas handle it naturally
     
     if output_file is None:
         # Fallback: print to stdout in a simple CSV-like format
@@ -144,7 +176,8 @@ def aggregate_results(
     output_file.parent.mkdir(parents=True, exist_ok=True)
     
     if output_format == "csv":
-        df.to_csv(output_file, index=False)
+        # Use na_rep to make missing values more readable
+        df.to_csv(output_file, index=False, na_rep="")
     elif output_format == "json":
         df.to_json(output_file, orient="records", indent=2)
     elif output_format == "html":
