@@ -2,7 +2,7 @@
 impl/README.md
 Icon
 logo.png
-
+impl/codenet_raw/
 # Python cache files
 __pycache__/
 */__pycache__/

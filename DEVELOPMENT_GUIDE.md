@@ -306,6 +306,105 @@ See the "Manual Testing Guide" section below for detailed instructions on how to
 
 ---
 
+## Step 9: HumanEval CUT Curation
+
+**Branch:** `feature/integration-testing` (continue) or a new branch like `feature/humaneval-cut`
+
+**Status:** ✅ DONE
+
+**Why this step exists (A1):**
+
+The A1 minimum requirements specify **10–20 functions/methods** chosen from an allowed source such as **public datasets (MBPP, HumanEval, CodeNet subsets)**. The current CUT modules in `impl/cut/` (`calculator.py`, `string_utils.py`, `data_structures.py`) are **synthetic samples** and do not satisfy the “dataset/source provenance” requirement by themselves.
+
+**What was done:**
+
+- ✅ Downloaded HumanEval dataset (`human-eval-v2-20210705.jsonl`)
+- ✅ Selected **19 diverse standalone functions** covering multiple categories:
+  - Math/statistics: `truncate_number`, `mean_absolute_deviation`, `greatest_common_divisor`, `sum_product`, `rescale_to_unit`, `factorize`
+  - List operations: `has_close_elements`, `below_zero`, `intersperse`, `rolling_max`, `sort_numbers`, `find_closest_elements`, `remove_duplicates`
+  - String operations: `parse_nested_parens`, `filter_by_substring`, `make_palindrome`, `string_xor`, `count_distinct_characters`, `flip_case`
+- ✅ Created importable module: `impl/cut/humaneval_subset.py`
+- ✅ Added provenance comments per function (task_id, entry_point, dataset source)
+
+**Dataset Information:**
+
+- **Source**: OpenAI HumanEval dataset
+- **Download**: https://github.com/openai/human-eval
+- **License**: MIT License
+- **Dataset file**: `impl/human-eval-v2-20210705.jsonl` (164 programming problems)
+- **Selected functions**: 19 functions from HumanEval tasks 0, 2-11, 13, 16, 19-21, 25-27
+
+**Implementation details:**
+
+- Functions extracted from HumanEval JSONL format (prompt + canonical_solution)
+- All functions are standalone and importable
+- Provenance comments include: task_id (e.g., "HumanEval/0"), entry_point (function name), and dataset file reference
+- Functions maintain original docstrings and type hints
+- No external dependencies beyond Python standard library
+
+**Manual steps completed:**
+
+- ✅ Downloaded HumanEval dataset to `impl/human-eval-v2-20210705.jsonl`
+- ✅ Created Python script to parse JSONL and extract functions
+- ✅ Selected 19 diverse functions based on algorithmic diversity
+- ✅ Generated `impl/cut/humaneval_subset.py` with proper provenance
+- ✅ Validated file syntax and importability
+
+---
+
+## Step 10: End-to-end Experiments + Results Capture
+
+**Branch:** `feature/integration-testing` (continue) or a new branch like `feature/experiments-humaneval`
+
+**Status:** ⏳ PENDING
+
+**Goal (A1):**
+
+Produce experimental evidence that compares:
+
+- Single-agent baseline
+- Collaborative multi-agent (≥2 roles)
+- Competitive multi-agent
+
+using at least one evaluation method (this repo supports **coverage**, **mutation**, and **diversity**).
+
+**What needs to be done:**
+
+- Run generation for `humaneval_subset` in all three modes (single/collab/competitive)
+- Run pytest for each mode
+- Run evaluations (coverage, mutation, diversity)
+- Aggregate results into CSV/HTML in `impl/results/`
+
+**Manual steps (example commands):**
+
+```bash
+cd impl
+
+# Generate tests (all modes)
+python scripts/generate_single.py --cut-module humaneval_subset --num-tests 10
+python scripts/generate_collab.py --cut-module humaneval_subset --num-agents 3 --num-tests 10
+python scripts/generate_competitive.py --cut-module humaneval_subset --num-agents 2 --num-tests 10 --competition-mode adversarial
+
+# Run tests
+python scripts/run_pytest.py --test-dir tests_generated/single --cut-module-path cut
+python scripts/run_pytest.py --test-dir tests_generated/collab --cut-module-path cut
+python scripts/run_pytest.py --test-dir tests_generated/competitive --cut-module-path cut
+
+# Evaluate (write outputs into impl/results/)
+python scripts/eval_coverage.py --test-dir tests_generated/single --cut-module humaneval_subset --output-file results/coverage_humaneval_subset_single.json --report-format json
+python scripts/eval_mutation.py --test-dir tests_generated/single --cut-module humaneval_subset --output-file results/mutation_humaneval_subset_single.json
+python scripts/eval_diversity.py --test-dir tests_generated/single --output-file results/diversity_humaneval_subset_single.json --diversity-metric syntactic
+
+# Aggregate
+python scripts/aggregate.py --results-dir results --output-file results/results_summary.csv --output-format csv
+python scripts/aggregate.py --results-dir results --output-file results/results_summary.html --output-format html
+```
+
+**Notes:**
+
+- You must have a local LLM server running (default: Ollama at `http://localhost:11434/api/generate`) and Python dependencies installed.
+- Generated tests may require iteration (fix imports/assertions or regenerate) before evaluation metrics are meaningful.
+
 ---
 
 ## Manual Testing Guide
