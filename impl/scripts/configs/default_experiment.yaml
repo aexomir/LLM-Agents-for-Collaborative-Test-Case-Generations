@@ -1,0 +1,46 @@
+experiment:
+  id: null # Auto-generated if null
+  name: "Step 10 Experiment"
+  description: "Compare single/collab/competitive test generation"
+
+cut_module: "humaneval_subset"
+num_tests: 10
+
+generation:
+  single:
+    enabled: true
+    num_tests: 10
+  collab:
+    enabled: true
+    num_agents: 3
+    num_tests: 10
+  competitive:
+    enabled: true
+    num_agents: 2
+    num_tests: 10
+    competition_mode: "adversarial" # adversarial, diversity, coverage
+
+evaluation:
+  pytest:
+    enabled: true
+    verbose: false
+  coverage:
+    enabled: true
+    report_format: "json"
+  diversity:
+    enabled: true
+    metric: "syntactic" # syntactic, semantic, coverage
+
+aggregation:
+  enabled: true
+  formats: ["csv", "html"]
+
+output:
+  base_dir: "results/experiments"
+  create_timestamped_dirs: true
+
+logging:
+  level: "INFO" # DEBUG, INFO, WARNING, ERROR
+  file: true
+  console: true
+  format: "detailed" # simple, detailed

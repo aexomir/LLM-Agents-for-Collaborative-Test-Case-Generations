@@ -7,7 +7,11 @@ CRITICAL REQUIREMENTS - Follow these exactly:
 1. IMPORT STATEMENTS (REQUIRED):
    - Must import the module: `from impl.cut import {cut_module_name}`
    - Must import pytest: `import pytest`
-   - Use the correct function names from the code above
+   - IMPORTANT: Import the MODULE only, NOT individual functions
+   - Use functions as: `{cut_module_name}.function_name()` (e.g., `humaneval_subset.has_close_elements()`)
+   - DO NOT use: `from impl.cut import {cut_module_name}, function1, function2` (WRONG)
+   - DO NOT use: `from impl.cut.{cut_module_name} import function1` (WRONG)
+   - CORRECT: `from impl.cut import {cut_module_name}` then use `{cut_module_name}.function_name()`
 
 2. TEST FUNCTION REQUIREMENTS:
    - Every function MUST start with 'test_' prefix
@@ -43,19 +47,21 @@ import pytest
 
 def test_function_name_normal_case():
     """Test normal use case with valid inputs."""
-    result = function_name(2, 3)
+    result = {cut_module_name}.function_name(2, 3)
     assert result == 5
 
 def test_function_name_edge_case_zero():
     """Test edge case with zero input."""
-    result = function_name(0, 5)
+    result = {cut_module_name}.function_name(0, 5)
     assert result == 5
 
 def test_function_name_error_case():
     """Test error handling for invalid input."""
     with pytest.raises(ValueError):
-        function_name(-1, 0)
+        {cut_module_name}.function_name(-1, 0)
 ```
+
+CRITICAL: Always prefix function calls with the module name: `{cut_module_name}.function_name()`
 
 IMPORTANT: 
 - Output ONLY valid Python code (no markdown, no explanations outside docstrings)

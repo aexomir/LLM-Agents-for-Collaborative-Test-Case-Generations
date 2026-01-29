@@ -1,0 +1,8 @@
+{
+  "run_id": "20260129_031531",
+  "timestamp": "2026-01-29T03:20:15.404230",
+  "cut_module": "humaneval_subset",
+  "mode": "single",
+  "num_tests": 10,
+  "test_file": "test_humaneval_subset.py"
+}

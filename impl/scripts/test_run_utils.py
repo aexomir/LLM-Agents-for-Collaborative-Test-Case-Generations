@@ -126,3 +126,35 @@ def create_timestamped_output_dir(base_dir: Path, mode: str) -> Tuple[Path, str]
     output_dir.mkdir(parents=True, exist_ok=True)
     
     return output_dir, run_id
+
+
+def validate_test_directory(test_dir: Path) -> Tuple[list, int]:
+    """
+    Validate test directory and return test files and valid test count.
+    
+    Args:
+        test_dir: Directory containing test files
+        
+    Returns:
+        Tuple of (list of test file paths, count of valid test files)
+    """
+    import ast
+    
+    if not test_dir.exists():
+        return [], 0
+    
+    test_files = list(test_dir.glob("test_*.py"))
+    if not test_files:
+        return [], 0
+    
+    # Validate test files can be parsed
+    valid_count = 0
+    for test_file in test_files:
+        try:
+            with open(test_file, 'r') as f:
+                ast.parse(f.read())
+            valid_count += 1
+        except SyntaxError:
+            pass
+    
+    return test_files, valid_count

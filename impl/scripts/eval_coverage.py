@@ -45,16 +45,31 @@ def eval_coverage(
     
     print(f"Evaluating coverage for {cut_module} using tests in {test_dir}...")
     
+    # Validate test directory
+    from impl.scripts.test_run_utils import validate_test_directory
+    test_files, valid_count = validate_test_directory(test_dir)
+    
+    if not test_files:
+        error_msg = f"No test files found in {test_dir}"
+        print(f"Error: {error_msg}")
+        return {"line": 0.0, "branch": 0.0, "error": error_msg}
+    
+    print(f"Found {len(test_files)} test file(s)")
+    
+    if valid_count == 0:
+        error_msg = "No valid test files found"
+        print(f"Error: {error_msg}")
+        return {"line": 0.0, "branch": 0.0, "error": error_msg}
+    
     # Prepare environment
     env = os.environ.copy()
     env['PYTHONPATH'] = str(impl_dir.parent)
     
     # Run coverage with pytest
-    # Use the actual directory path for source, not module path
-    cut_dir = impl_dir / "cut"
+    # Use module path format for --source (coverage.py expects module paths, not directory paths)
     coverage_cmd = [
         "coverage", "run",
-        "--source", str(cut_dir),
+        "--source", "impl.cut",  # Use module path, not directory path
         "--branch",  # Enable branch coverage
         "-m", "pytest",
         str(test_dir),
@@ -82,14 +97,6 @@ def eval_coverage(
                 print("ERROR: No coverage data collected. Tests may have failed to run.")
                 return {"line": 0.0, "branch": 0.0, "error": "Tests failed to run"}
         
-        # Get coverage report in JSON format for parsing
-        json_result = subprocess.run(
-            ["coverage", "json", "-o", "-"],
-            capture_output=True,
-            text=True,
-            cwd=impl_dir.parent,
-        )
-        
         # Extract run ID from test directory
         run_id = get_run_id_from_path(test_dir)
         
@@ -97,10 +104,126 @@ def eval_coverage(
         if run_id:
             metrics["run_id"] = run_id
         
-        if json_result.returncode == 0 and json_result.stdout.strip():
-            try:
-                coverage_data = json.loads(json_result.stdout)
+        # Check if coverage data was collected
+        if "No data to report" in result.stdout or "No data to report" in result.stderr:
+            print("ERROR: No coverage data collected. Tests may not have run.")
+            metrics["error"] = "No coverage data collected - tests may not have run"
+            if output_file:
+                output_file.parent.mkdir(parents=True, exist_ok=True)
+                metrics_json = {
+                    "line": 0.0,
+                    "branch": None,
+                    "error": "No coverage data collected - tests may not have run"
+                }
+                if run_id:
+                    metrics_json["run_id"] = run_id
+                with open(output_file, 'w') as f:
+                    json.dump(metrics_json, f, indent=2)
+            return metrics
+        
+        # Generate report in specified format and extract metrics
+        coverage_data = None
+        
+        if output_file:
+            output_file.parent.mkdir(parents=True, exist_ok=True)
+            
+            if report_format == "json":
+                # Save full coverage JSON to a detailed file
+                detailed_output = output_file.parent / f"{output_file.stem}_detailed.json"
+                json_save_result = subprocess.run(
+                    ["coverage", "json", "-o", str(detailed_output)],
+                    cwd=impl_dir.parent,
+                    capture_output=True,
+                    text=True,
+                )
+                print(f"✓ Saved detailed JSON coverage report to: {detailed_output}")
                 
+                # Read back the saved file to extract metrics
+                try:
+                    with open(detailed_output, 'r') as f:
+                        coverage_data = json.load(f)
+                except Exception as e:
+                    print(f"Warning: Could not read saved coverage JSON: {e}")
+                    # Fallback: try to get from stdout
+                    json_result = subprocess.run(
+                        ["coverage", "json", "-o", "-"],
+                        capture_output=True,
+                        text=True,
+                        cwd=impl_dir.parent,
+                    )
+                    if json_result.returncode == 0 and json_result.stdout.strip():
+                        try:
+                            coverage_data = json.loads(json_result.stdout)
+                        except json.JSONDecodeError:
+                            pass
+                
+            elif report_format == "html":
+                # Generate HTML report
+                html_dir = output_file.parent / f"{output_file.stem}_html"
+                subprocess.run(
+                    ["coverage", "html", "-d", str(html_dir)],
+                    cwd=impl_dir.parent,
+                )
+                print(f"✓ Saved HTML coverage report to: {html_dir}/")
+                
+                # Get JSON for metrics extraction
+                json_result = subprocess.run(
+                    ["coverage", "json", "-o", "-"],
+                    capture_output=True,
+                    text=True,
+                    cwd=impl_dir.parent,
+                )
+                if json_result.returncode == 0 and json_result.stdout.strip():
+                    try:
+                        coverage_data = json.loads(json_result.stdout)
+                    except json.JSONDecodeError as e:
+                        print(f"Error parsing coverage JSON: {e}")
+                
+            else:  # text format
+                # Get text report
+                text_result = subprocess.run(
+                    ["coverage", "report"],
+                    capture_output=True,
+                    text=True,
+                    cwd=impl_dir.parent,
+                )
+                with open(output_file, 'w') as f:
+                    f.write(text_result.stdout)
+                print(f"✓ Saved text coverage report to: {output_file}")
+                
+                # Get JSON for metrics extraction
+                json_result = subprocess.run(
+                    ["coverage", "json", "-o", "-"],
+                    capture_output=True,
+                    text=True,
+                    cwd=impl_dir.parent,
+                )
+                if json_result.returncode == 0 and json_result.stdout.strip():
+                    try:
+                        coverage_data = json.loads(json_result.stdout)
+                    except json.JSONDecodeError as e:
+                        print(f"Error parsing coverage JSON: {e}")
+        else:
+            # No output file specified, get JSON from stdout
+            json_result = subprocess.run(
+                ["coverage", "json", "-o", "-"],
+                capture_output=True,
+                text=True,
+                cwd=impl_dir.parent,
+            )
+            if json_result.returncode == 0 and json_result.stdout.strip():
+                try:
+                    coverage_data = json.loads(json_result.stdout)
+                except json.JSONDecodeError as e:
+                    print(f"Error parsing coverage JSON: {e}")
+        
+        # Extract metrics from coverage data
+        if coverage_data:
+            # Validate that files were tracked
+            if not coverage_data.get("files"):
+                print("WARNING: No files tracked in coverage data")
+                metrics["error"] = "No files tracked in coverage data"
+            else:
                 # Extract totals - coverage JSON format has 'totals' at root level
                 totals = coverage_data.get("totals", {})
                 
@@ -130,63 +253,29 @@ def eval_coverage(
                     print(f"✓ Branch coverage: {metrics['branch']:.1%}")
                 else:
                     print(f"✓ Branch coverage: N/A (no branches)")
-                    
-            except json.JSONDecodeError as e:
-                print(f"Error parsing coverage JSON: {e}")
-                print(f"JSON output: {json_result.stdout[:500]}")
+        else:
+            print("WARNING: Could not extract coverage data")
+            metrics["error"] = "Could not extract coverage data"
         
-        # Generate report in specified format
+        # Always save metrics JSON for aggregation
+        # The aggregate script expects files with "line" and "branch" keys at root level
+        # Save metrics to the main output_file (this is what aggregate.py will read)
         if output_file:
-            output_file.parent.mkdir(parents=True, exist_ok=True)
+            metrics_json = {
+                "line": metrics.get("line", 0.0),
+                "branch": metrics.get("branch"),
+            }
+            if "error" in metrics:
+                metrics_json["error"] = metrics["error"]
+            if run_id:
+                metrics_json["run_id"] = run_id
             
-            if report_format == "json":
-                # Save JSON report
-                subprocess.run(
-                    ["coverage", "json", "-o", str(output_file)],
-                    cwd=impl_dir.parent,
-                )
-                print(f"✓ Saved JSON coverage report to: {output_file}")
-                
-            elif report_format == "html":
-                # Generate HTML report
-                html_dir = output_file.parent / f"{output_file.stem}_html"
-                subprocess.run(
-                    ["coverage", "html", "-d", str(html_dir)],
-                    cwd=impl_dir.parent,
-                )
-                print(f"✓ Saved HTML coverage report to: {html_dir}/")
-                
-            else:  # text format
-                # Get text report
-                text_result = subprocess.run(
-                    ["coverage", "report"],
-                    capture_output=True,
-                    text=True,
-                    cwd=impl_dir.parent,
-                )
-                with open(output_file, 'w') as f:
-                    f.write(text_result.stdout)
-                print(f"✓ Saved text coverage report to: {output_file}")
-            
-            # Always save metrics as JSON for aggregation, regardless of report_format
-            # This ensures the aggregate script can find coverage results
-            if output_file.suffix != '.json':
-                json_output = output_file.with_suffix('.json')
-            else:
-                json_output = output_file
-            
-            # Only save JSON metrics if we haven't already saved JSON format
-            if report_format != "json" or json_output != output_file:
-                metrics_json = {
-                    "line": metrics.get("line", 0.0),
-                    "branch": metrics.get("branch"),
-                    "error": metrics.get("error")
-                }
-                if "run_id" in metrics:
-                    metrics_json["run_id"] = metrics["run_id"]
-                with open(json_output, 'w') as f:
-                    json.dump(metrics_json, f, indent=2)
-                print(f"✓ Saved coverage metrics JSON to: {json_output}")
+            # Save metrics JSON to the expected output file (for aggregation)
+            # When report_format == "json", we've already saved detailed JSON to _detailed.json
+            # Now save simple metrics to the main output_file
+            with open(output_file, 'w') as f:
+                json.dump(metrics_json, f, indent=2)
+            print(f"✓ Saved coverage metrics JSON to: {output_file}")
         
         return metrics
         

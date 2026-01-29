@@ -1,0 +1,173 @@
+{
+  "created_at": "2026-01-29T03:15:31.510536",
+  "config": {
+    "experiment": {
+      "id": "humaneval_subset_20260129_031531",
+      "name": "Step 10 Experiment",
+      "description": "Compare single/collab/competitive test generation"
+    },
+    "cut_module": "humaneval_subset",
+    "num_tests": 10,
+    "generation": {
+      "single": {
+        "enabled": true,
+        "num_tests": 10
+      },
+      "collab": {
+        "enabled": true,
+        "num_agents": 3,
+        "num_tests": 10
+      },
+      "competitive": {
+        "enabled": true,
+        "num_agents": 2,
+        "num_tests": 10,
+        "competition_mode": "adversarial"
+      }
+    },
+    "evaluation": {
+      "pytest": {
+        "enabled": true,
+        "verbose": false
+      },
+      "coverage": {
+        "enabled": true,
+        "report_format": "json"
+      },
+      "diversity": {
+        "enabled": true,
+        "metric": "syntactic"
+      }
+    },
+    "aggregation": {
+      "enabled": true,
+      "formats": [
+        "csv",
+        "html"
+      ]
+    },
+    "output": {
+      "base_dir": "results/experiments",
+      "create_timestamped_dirs": true
+    },
+    "logging": {
+      "level": "INFO",
+      "file": true,
+      "console": true,
+      "format": "detailed"
+    }
+  },
+  "cli_args": {
+    "config": null,
+    "cut_module": null,
+    "num_tests": null,
+    "experiment_id": null,
+    "log_level": null,
+    "skip_generation": false,
+    "skip_evaluation": false,
+    "skip_aggregation": false
+  },
+  "last_updated": "2026-01-29T03:26:09.626827",
+  "experiment_id": "humaneval_subset_20260129_031531",
+  "generation_results": {
+    "single": {
+      "mode": "single",
+      "test_dir": "/Users/aexomir/Desktop/LLM/impl/tests_generated/single/20260129_031531",
+      "run_id": "20260129_031531",
+      "timestamp": "2026-01-29T03:26:07.584713"
+    },
+    "collab": {
+      "mode": "collab",
+      "test_dir": "/Users/aexomir/Desktop/LLM/impl/tests_generated/collab/20260129_032015",
+      "run_id": "20260129_032015",
+      "timestamp": "2026-01-29T03:26:07.585240"
+    },
+    "competitive": {
+      "mode": "competitive",
+      "test_dir": "/Users/aexomir/Desktop/LLM/impl/tests_generated/competitive/20260129_032333",
+      "run_id": "20260129_032333",
+      "timestamp": "2026-01-29T03:26:07.585554"
+    }
+  },
+  "evaluation_results": {
+    "coverage": {
+      "single": {
+        "metric_type": "coverage",
+        "mode": "single",
+        "result_file": "/Users/aexomir/Desktop/LLM/results/experiments/humaneval_subset_20260129_031531/metrics/coverage_humaneval_subset_single.json",
+        "timestamp": "2026-01-29T03:26:09.624723",
+        "metrics": {
+          "line": 0.22922636103151864,
+          "branch": 0.16666666666666666,
+          "run_id": "20260129_031531"
+        }
+      },
+      "collab": {
+        "metric_type": "coverage",
+        "mode": "collab",
+        "result_file": "/Users/aexomir/Desktop/LLM/results/experiments/humaneval_subset_20260129_031531/metrics/coverage_humaneval_subset_collab.json",
+        "timestamp": "2026-01-29T03:26:09.625275",
+        "metrics": {
+          "line": 0.09742120343839542,
+          "branch": 0.0,
+          "run_id": "20260129_032015"
+        }
+      },
+      "competitive": {
+        "metric_type": "coverage",
+        "mode": "competitive",
+        "result_file": "/Users/aexomir/Desktop/LLM/results/experiments/humaneval_subset_20260129_031531/metrics/coverage_humaneval_subset_competitive.json",
+        "timestamp": "2026-01-29T03:26:09.625750",
+        "metrics": {
+          "line": 0.1805157593123209,
+          "branch": 0.1111111111111111,
+          "run_id": "20260129_032333"
+        }
+      }
+    },
+    "diversity": {
+      "single": {
+        "metric_type": "diversity",
+        "mode": "single",
+        "result_file": "/Users/aexomir/Desktop/LLM/results/experiments/humaneval_subset_20260129_031531/metrics/diversity_humaneval_subset_single.json",
+        "timestamp": "2026-01-29T03:26:09.626082",
+        "metrics": {
+          "diversity_score": 0.5980670477421508,
+          "unique_ast_patterns": 16,
+          "unique_assertions": 12,
+          "unique_calls": 7,
+          "total_tests": 16,
+          "run_id": "20260129_031531"
+        }
+      },
+      "collab": {
+        "metric_type": "diversity",
+        "mode": "collab",
+        "result_file": "/Users/aexomir/Desktop/LLM/results/experiments/humaneval_subset_20260129_031531/metrics/diversity_humaneval_subset_collab.json",
+        "timestamp": "2026-01-29T03:26:09.626404",
+        "metrics": {
+          "diversity_score": 0.5846871794131494,
+          "unique_ast_patterns": 10,
+          "unique_assertions": 10,
+          "unique_calls": 6,
+          "total_tests": 10,
+          "run_id": "20260129_032015"
+        }
+      },
+      "competitive": {
+        "metric_type": "diversity",
+        "mode": "competitive",
+        "result_file": "/Users/aexomir/Desktop/LLM/results/experiments/humaneval_subset_20260129_031531/metrics/diversity_humaneval_subset_competitive.json",
+        "timestamp": "2026-01-29T03:26:09.626825",
+        "metrics": {
+          "diversity_score": 0.5411036345104719,
+          "unique_ast_patterns": 20,
+          "unique_assertions": 16,
+          "unique_calls": 5,
+          "total_tests": 20,
+          "run_id": "20260129_032333"
+        }
+      }
+    }
+  }
+}

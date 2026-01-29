@@ -98,8 +98,7 @@ def call_local_llm(
             "requests library is required. Install it with: pip install requests"
         )
     
-    model = model or os.getenv("OLLAMA_MODEL", "llama3.2:1b")
-    print(f"Using Ollama model: {model}")
+    model = model or os.getenv("OLLAMA_MODEL", "qwen2.5-coder:14b-instruct")
     api_url = api_url or os.getenv(
         "OLLAMA_API_URL", "http://localhost:11434/api/generate"
     )
@@ -252,7 +251,7 @@ def call_llm(
                 
                 # Auto-fallback to local if OPENAI fails
                 if os.getenv("LLM_AUTO_FALLBACK", "true").lower() == "true":
-                    fallback_model = model or os.getenv("OLLAMA_MODEL", "llama3.2:1b")
+                    fallback_model = model or os.getenv("OLLAMA_MODEL", "qwen2.5-coder:14b-instruct")
                     print(f"Auto-fallback enabled: Using local Ollama model '{fallback_model}' instead...")
                     return call_local_llm(
                         prompt=prompt,

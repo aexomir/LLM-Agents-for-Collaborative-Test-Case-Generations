@@ -7,7 +7,11 @@ CRITICAL REQUIREMENTS - Follow these exactly:
 1. IMPORT STATEMENTS (REQUIRED):
    - Must import the module: `from impl.cut import {cut_module_name}`
    - Must import pytest: `import pytest`
-   - Use the correct function names from the code above
+   - IMPORTANT: Import the MODULE only, NOT individual functions
+   - Use functions as: `{cut_module_name}.function_name()` (e.g., `humaneval_subset.has_close_elements()`)
+   - DO NOT use: `from impl.cut import {cut_module_name}, function1, function2` (WRONG)
+   - DO NOT use: `from impl.cut.{cut_module_name} import function1` (WRONG)
+   - CORRECT: `from impl.cut import {cut_module_name}` then use `{cut_module_name}.function_name()`
 
 2. TEST FUNCTION REQUIREMENTS:
    - Every function MUST start with 'test_' prefix
