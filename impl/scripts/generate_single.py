@@ -229,7 +229,7 @@ def generate_single_tests(
         if provider == "openai":
             model_name = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
         else:
-            model_name = os.getenv("OLLAMA_MODEL", "llama3.2:1b")
+            model_name = os.getenv("OLLAMA_MODEL", "qwen2.5-coder:14b-instruct")
         
         print("Calling LLM to generate test code...")
         print(f"Provider: {provider}")

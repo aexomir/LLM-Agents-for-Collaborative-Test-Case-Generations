@@ -62,6 +62,58 @@ class TestFunctionAnalyzer(ast.NodeVisitor):
         self.generic_visit(node)
 
 
+def calculate_ast_similarity(ast_dump1: str, ast_dump2: str) -> float:
+    """
+    Calculate similarity between two AST dumps using Jaccard similarity.
+    
+    Args:
+        ast_dump1: AST dump string of first test
+        ast_dump2: AST dump string of second test
+        
+    Returns:
+        Similarity score between 0.0 (completely different) and 1.0 (identical)
+    """
+    # Tokenize AST dumps into sets of tokens (node types, names, etc.)
+    # This gives us a simple but effective similarity measure
+    tokens1 = set(ast_dump1.split())
+    tokens2 = set(ast_dump2.split())
+    
+    if not tokens1 and not tokens2:
+        return 1.0  # Both empty, consider identical
+    
+    if not tokens1 or not tokens2:
+        return 0.0  # One empty, one not, completely different
+    
+    # Jaccard similarity: intersection / union
+    intersection = len(tokens1 & tokens2)
+    union = len(tokens1 | tokens2)
+    
+    return intersection / union if union > 0 else 0.0
+
+
+def calculate_set_similarity(set1: set, set2: set) -> float:
+    """
+    Calculate Jaccard similarity between two sets.
+    
+    Args:
+        set1: First set
+        set2: Second set
+        
+    Returns:
+        Similarity score between 0.0 and 1.0
+    """
+    if not set1 and not set2:
+        return 1.0
+    
+    if not set1 or not set2:
+        return 0.0
+    
+    intersection = len(set1 & set2)
+    union = len(set1 | set2)
+    
+    return intersection / union if union > 0 else 0.0
+
+
 def parse_test_file(file_path: Path) -> List[Dict[str, Any]]:
     """Parse a test file and extract test function information."""
     try:
@@ -77,11 +129,26 @@ def parse_test_file(file_path: Path) -> List[Dict[str, Any]]:
 
 
 def calculate_syntactic_diversity(all_tests: List[Dict[str, Any]]) -> Dict[str, float]:
-    """Calculate syntactic diversity based on AST patterns."""
+    """
+    Calculate syntactic diversity based on AST patterns.
+    
+    Uses pairwise similarity between tests to calculate diversity.
+    Diversity = 1 - average_similarity (lower similarity = higher diversity)
+    """
     if not all_tests:
         return {"diversity_score": 0.0, "unique_patterns": 0}
     
-    # Count unique AST patterns
+    if len(all_tests) == 1:
+        # Single test has maximum diversity (nothing to compare against)
+        return {
+            "diversity_score": 1.0,
+            "unique_ast_patterns": 1,
+            "unique_assertions": len(all_tests[0]['assertions']),
+            "unique_calls": len(set(all_tests[0]['calls'])),
+            "total_tests": 1,
+        }
+    
+    # Count unique AST patterns (for reporting)
     ast_patterns = set()
     assertion_patterns = set()
     call_patterns = set()
@@ -93,8 +160,20 @@ def calculate_syntactic_diversity(all_tests: List[Dict[str, Any]]) -> Dict[str, 
         for call in test['calls']:
             call_patterns.add(call)
     
-    # Calculate diversity score (unique patterns / total tests)
-    diversity_score = len(ast_patterns) / len(all_tests)
+    # Calculate pairwise similarity between all tests
+    similarities = []
+    for i, test1 in enumerate(all_tests):
+        for test2 in all_tests[i+1:]:
+            similarity = calculate_ast_similarity(test1['ast_dump'], test2['ast_dump'])
+            similarities.append(similarity)
+    
+    # Diversity = 1 - average similarity
+    # Lower similarity between tests = higher diversity
+    if similarities:
+        average_similarity = sum(similarities) / len(similarities)
+        diversity_score = 1.0 - average_similarity
+    else:
+        diversity_score = 1.0  # No comparisons possible
     
     return {
         "diversity_score": diversity_score,
@@ -106,22 +185,46 @@ def calculate_syntactic_diversity(all_tests: List[Dict[str, Any]]) -> Dict[str, 
 
 
 def calculate_semantic_diversity(all_tests: List[Dict[str, Any]]) -> Dict[str, float]:
-    """Calculate semantic diversity based on input values and edge cases."""
-    if not all_tests:
-        return {"diversity_score": 0.0, "unique_values": 0}
+    """
+    Calculate semantic diversity based on input values and edge cases.
     
-    # Collect all literal values used as test inputs
+    Uses similarity between literal value sets to calculate diversity.
+    """
+    if not all_tests:
+        return {
+            "diversity_score": 0.0,
+            "unique_values": 0,
+            "total_values": 0,
+            "edge_case_count": 0,
+            "total_tests": 0,
+        }
+    
+    if len(all_tests) == 1:
+        # Single test
+        literals = [str(l) for l in all_tests[0]['literals']]
+        unique_literals = set(literals)
+        return {
+            "diversity_score": 1.0,
+            "unique_values": len(unique_literals),
+            "total_values": len(literals),
+            "edge_case_count": sum(1 for l in all_tests[0]['literals'] 
+                                  if l in [0, 0.0, -1, '', None, True, False] or l == [] or l == {}),
+            "total_tests": 1,
+        }
+    
+    # Collect literal value sets for each test
+    test_literal_sets = []
     all_literals = []
     unique_literals = set()
     
     for test in all_tests:
+        test_literals = set()
         for literal in test['literals']:
             all_literals.append(literal)
-            # Convert to hashable type
-            try:
-                unique_literals.add(str(literal))
-            except:
-                pass
+            literal_str = str(literal)
+            unique_literals.add(literal_str)
+            test_literals.add(literal_str)
+        test_literal_sets.append(test_literals)
     
     # Identify edge case patterns
     edge_case_count = 0
@@ -131,38 +234,78 @@ def calculate_semantic_diversity(all_tests: List[Dict[str, Any]]) -> Dict[str, f
         if literal in edge_case_values or literal == [] or literal == {}:
             edge_case_count += 1
     
-    # Calculate diversity score
-    if all_literals:
-        diversity_score = len(unique_literals) / len(all_literals)
+    # Calculate pairwise similarity between literal sets
+    similarities = []
+    for i, set1 in enumerate(test_literal_sets):
+        for set2 in test_literal_sets[i+1:]:
+            similarity = calculate_set_similarity(set1, set2)
+            similarities.append(similarity)
+    
+    # Diversity = 1 - average similarity
+    if similarities:
+        average_similarity = sum(similarities) / len(similarities)
+        diversity_score = 1.0 - average_similarity
     else:
-        diversity_score = 0.0
+        # Fallback to uniqueness ratio if no comparisons possible
+        diversity_score = len(unique_literals) / len(all_literals) if all_literals else 0.0
     
     return {
         "diversity_score": diversity_score,
         "unique_values": len(unique_literals),
         "total_values": len(all_literals),
         "edge_case_count": edge_case_count,
+        "total_tests": len(all_tests),
     }
 
 
 def calculate_coverage_diversity(all_tests: List[Dict[str, Any]]) -> Dict[str, float]:
-    """Calculate diversity based on function coverage patterns."""
+    """
+    Calculate diversity based on function coverage patterns.
+    
+    Uses similarity between function call sets to calculate diversity.
+    """
     if not all_tests:
-        return {"diversity_score": 0.0, "unique_patterns": 0}
+        return {
+            "diversity_score": 0.0,
+            "unique_patterns": 0,
+            "total_tests": 0,
+        }
+    
+    if len(all_tests) == 1:
+        calls = set(all_tests[0]['calls'])
+        return {
+            "diversity_score": 1.0,
+            "unique_patterns": 1,
+            "total_tests": 1,
+        }
     
     # Track which functions each test calls
-    test_signatures = []
+    test_call_sets = []
+    all_signatures = []
     
     for test in all_tests:
-        # Create signature based on called functions
-        signature = tuple(sorted(set(test['calls'])))
-        test_signatures.append(signature)
+        calls = set(test['calls'])
+        test_call_sets.append(calls)
+        signature = tuple(sorted(calls))
+        all_signatures.append(signature)
     
-    # Count unique signatures
-    unique_signatures = len(set(test_signatures))
+    # Count unique signatures (for reporting)
+    unique_signatures = len(set(all_signatures))
     
-    # Calculate diversity score
-    diversity_score = unique_signatures / len(all_tests) if all_tests else 0.0
+    # Calculate pairwise similarity between call sets
+    similarities = []
+    for i, set1 in enumerate(test_call_sets):
+        for set2 in test_call_sets[i+1:]:
+            similarity = calculate_set_similarity(set1, set2)
+            similarities.append(similarity)
+    
+    # Diversity = 1 - average similarity
+    if similarities:
+        average_similarity = sum(similarities) / len(similarities)
+        diversity_score = 1.0 - average_similarity
+    else:
+        # Fallback to uniqueness ratio
+        diversity_score = unique_signatures / len(all_tests) if all_tests else 0.0
     
     return {
         "diversity_score": diversity_score,
