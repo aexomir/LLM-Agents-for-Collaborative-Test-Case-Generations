@@ -21,7 +21,7 @@ def call_local_llm(
             "requests library is required. Install it with: pip install requests"
         )
     
-    model = model or os.getenv("OLLAMA_MODEL", "llama3.2:1b")
+    model = model or os.getenv("OLLAMA_MODEL", "qwen2.5-coder:14b-instruct")
     api_url = api_url or os.getenv(
         "OLLAMA_API_URL", "http://localhost:11434/api/generate"
     )
