@@ -663,7 +663,7 @@ def generate_competitive_tests(
         print(f"✓ Saved run metadata to: {metadata_file}")
 
     # Also create/overwrite a wrapper file in impl/tests so tools like
-    # pytest and mutmut can discover this competitive suite automatically.
+    # pytest can discover this competitive suite automatically.
     tests_dir = actual_output_dir.parent.parent / "tests"
     tests_dir.mkdir(parents=True, exist_ok=True)
     
@@ -676,7 +676,7 @@ def generate_competitive_tests(
     wrapper_path = tests_dir / f"test_{cut_module}_competitive.py"
     wrapper_code = (
         "\"\"\"Auto-generated wrapper for competitive tests.\n"
-        "Imports the generated tests so pytest/mutmut see them under 'tests/'.\n"
+        "Imports the generated tests so pytest see them under 'tests/'.\n"
         "\"\"\"\n\n"
         f"from {import_path} import *  # noqa: F401,F403\n"
     )

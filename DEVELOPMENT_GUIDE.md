@@ -19,7 +19,7 @@ The implementation follows this workflow:
 **What was done:**
 
 - Created `impl/` directory structure
-- Added `pyproject.toml` with dependencies (pytest, coverage, mutmut, pandas)
+- Added `pyproject.toml` with dependencies (pytest, coverage, pandas)
 - Created placeholder scripts with CLI arguments
 - Added `__init__.py` files for packages
 - Created `impl/README.md` with usage instructions
@@ -192,7 +192,6 @@ The implementation follows this workflow:
 
 - Implemented `run_pytest()` in `impl/scripts/run_pytest.py`
 - Implemented `eval_coverage()` in `impl/scripts/eval_coverage.py`
-- Implemented `eval_mutation()` in `impl/scripts/eval_mutation.py`
 - Implemented `eval_diversity()` in `impl/scripts/eval_diversity.py`
 
 **Manual steps:**
@@ -209,21 +208,16 @@ The implementation follows this workflow:
    - Parse coverage percentages
    - Generate report in specified format
    - Save to results directory
-4. **Implement eval_mutation.py:**
-   - Configure mutmut for CUT module
-   - Run `mutmut run`
-   - Parse mutmut results
-   - Calculate mutation score: `killed / (killed + survived)`
    - Save results to results directory
-5. **Implement eval_diversity.py:**
+4. **Implement eval_diversity.py:**
    - Parse all test files using AST
    - Calculate syntactic diversity (AST similarity)
    - Calculate semantic diversity (input value analysis)
    - Calculate coverage diversity (overlap analysis)
    - Save metrics to results directory
-6. Test each evaluation script independently
-7. Commit: `git commit -m "feat: implement evaluation scripts"`
-8. Merge to main: `git checkout main && git merge feature/evaluation-scripts`
+5. Test each evaluation script independently
+6. Commit: `git commit -m "feat: implement evaluation scripts"`
+7. Merge to main: `git checkout main && git merge feature/evaluation-scripts`
 
 ---
 
@@ -246,7 +240,6 @@ The implementation follows this workflow:
 2. Implement result parsing:
    - Scan `results/` directory
    - Parse coverage results
-   - Parse mutation results
    - Parse diversity results
 3. Implement aggregation:
    - Group by generation method (single, collab, competitive)
@@ -279,7 +272,7 @@ The implementation follows this workflow:
 - ✅ Updated `impl/README.md` with comprehensive documentation:
   - Known issues section (LLM requirements, generated test quality, evaluation limitations)
   - Performance notes (execution times, resource requirements, LLM API considerations)
-  - Example outputs (test generation, coverage, mutation, diversity, aggregated results)
+  - Example outputs (test generation, coverage, diversity, aggregated results)
   - Complete end-to-end workflow example
   - Troubleshooting guide
   - Best practices
@@ -356,7 +349,7 @@ The A1 minimum requirements specify **10–20 functions/methods** chosen from an
 
 **Branch:** `feature/integration-testing` (continue) or a new branch like `feature/experiments-humaneval`
 
-**Status:** ⏳ PENDING
+**Status:** ✅ DONE
 
 **Goal (A1):**
 
@@ -366,44 +359,143 @@ Produce experimental evidence that compares:
 - Collaborative multi-agent (≥2 roles)
 - Competitive multi-agent
 
-using at least one evaluation method (this repo supports **coverage**, **mutation**, and **diversity**).
+using at least one evaluation method (this repo supports **coverage** and **diversity**).
 
-**What needs to be done:**
+**What was done:**
 
-- Run generation for `humaneval_subset` in all three modes (single/collab/competitive)
-- Run pytest for each mode
-- Run evaluations (coverage, mutation, diversity)
-- Aggregate results into CSV/HTML in `impl/results/`
+- ✅ Implemented professional Python-based experiment orchestrator (`run_experiments.py`)
+- ✅ Created configuration system with YAML support (`experiment_config.py`)
+- ✅ Implemented structured logging infrastructure (`experiment_logger.py`)
+- ✅ Built result management system (`result_manager.py`)
+- ✅ Created experiment runner for phase orchestration (`experiment_runner.py`)
+- ✅ Added unit tests for all components
+- ✅ Created default configuration file (`configs/default_experiment.yaml`)
 
-**Manual steps (example commands):**
+**Architecture:**
+
+The new Step 10 implementation replaces the bash script with a professional Python orchestrator featuring:
+
+1. **Configuration-driven experiments** via YAML config files
+2. **Structured logging** with file and console output
+3. **Robust error handling** with recovery strategies
+4. **Progress tracking** and real-time status updates
+5. **Reproducibility** through experiment tracking and metadata
+6. **Modular architecture** with clear separation of concerns
+
+**Usage:**
+
+### Basic Usage
 
 ```bash
 cd impl
 
-# Generate tests (all modes)
-python scripts/generate_single.py --cut-module humaneval_subset --num-tests 10
-python scripts/generate_collab.py --cut-module humaneval_subset --num-agents 3 --num-tests 10
-python scripts/generate_competitive.py --cut-module humaneval_subset --num-agents 2 --num-tests 10 --competition-mode adversarial
+# Run with default configuration
+python scripts/run_experiments.py
 
-# Run tests
-python scripts/run_pytest.py --test-dir tests_generated/single --cut-module-path cut
-python scripts/run_pytest.py --test-dir tests_generated/collab --cut-module-path cut
-python scripts/run_pytest.py --test-dir tests_generated/competitive --cut-module-path cut
+# Use custom configuration file
+python scripts/run_experiments.py --config configs/default_experiment.yaml
 
-# Evaluate (write outputs into impl/results/)
-python scripts/eval_coverage.py --test-dir tests_generated/single --cut-module humaneval_subset --output-file results/coverage_humaneval_subset_single.json --report-format json
-python scripts/eval_mutation.py --test-dir tests_generated/single --cut-module humaneval_subset --output-file results/mutation_humaneval_subset_single.json
-python scripts/eval_diversity.py --test-dir tests_generated/single --output-file results/diversity_humaneval_subset_single.json --diversity-metric syntactic
+# Override specific parameters
+python scripts/run_experiments.py \
+  --cut-module humaneval_subset \
+  --num-tests 20 \
+  --experiment-id exp_001
 
-# Aggregate
-python scripts/aggregate.py --results-dir results --output-file results/results_summary.csv --output-format csv
-python scripts/aggregate.py --results-dir results --output-file results/results_summary.html --output-format html
+# Verbose logging
+python scripts/run_experiments.py --log-level DEBUG
+```
+
+### Configuration File
+
+The default configuration file is located at `impl/scripts/configs/default_experiment.yaml`:
+
+```yaml
+experiment:
+  id: null # Auto-generated if null
+  name: "Step 10 Experiment"
+  description: "Compare single/collab/competitive test generation"
+
+cut_module: "humaneval_subset"
+num_tests: 10
+
+generation:
+  single:
+    enabled: true
+    num_tests: 10
+  collab:
+    enabled: true
+    num_agents: 3
+    num_tests: 10
+  competitive:
+    enabled: true
+    num_agents: 2
+    num_tests: 10
+    competition_mode: "adversarial" # adversarial, diversity, coverage
+
+evaluation:
+  pytest:
+    enabled: true
+    verbose: false
+  coverage:
+    enabled: true
+    report_format: "json"
+  diversity:
+    enabled: true
+    metric: "syntactic" # syntactic, semantic, coverage
+
+aggregation:
+  enabled: true
+  formats: ["csv", "html"]
+
+output:
+  base_dir: "results/experiments"
+  create_timestamped_dirs: true
+
+logging:
+  level: "INFO" # DEBUG, INFO, WARNING, ERROR
+  file: true
+  console: true
+  format: "detailed" # simple, detailed
+```
+
+### Experiment Output Structure
+
+Each experiment creates an organized directory structure:
+
+```
+results/experiments/<experiment_id>/
+├── logs/
+│   └── experiment.log          # Detailed execution log
+├── tests/                      # Test generation metadata
+│   ├── single_generation.json
+│   ├── collab_generation.json
+│   └── competitive_generation.json
+├── metrics/                    # Evaluation results
+│   ├── coverage_*.json
+│   └── diversity_*.json
+├── reports/                    # Aggregated reports
+│   ├── results_summary.csv
+│   ├── results_summary.html
+│   └── experiment_report.md
+└── metadata.json               # Experiment metadata
+```
+
+### Advanced Usage
+
+```bash
+# Skip specific phases
+python scripts/run_experiments.py --skip-generation  # Use existing tests
+python scripts/run_experiments.py --skip-evaluation  # Skip evaluations
+python scripts/run_experiments.py --skip-aggregation # Skip aggregation
+
+# Environment variable overrides
+export EXPERIMENT_CUT_MODULE=humaneval_subset
+export EXPERIMENT_NUM_TESTS=20
+export EXPERIMENT_ID=custom_experiment_001
+python scripts/run_experiments.py
 ```
 
 **Notes:**
-
-- You must have a local LLM server running (default: Ollama at `http://localhost:11434/api/generate`) and Python dependencies installed.
-- Generated tests may require iteration (fix imports/assertions or regenerate) before evaluation metrics are meaningful.
 
 ---
 
@@ -418,7 +510,7 @@ This section provides step-by-step instructions for manually testing the complet
    ```bash
    cd impl
    pip install -e .
-   # Or manually: pip install pytest coverage mutmut pandas requests
+   # Or manually: pip install pytest coverage pandas requests
    ```
 
 2. **Start LLM Service (Ollama):**
@@ -427,12 +519,12 @@ This section provides step-by-step instructions for manually testing the complet
    # Install Ollama if not already installed: https://ollama.ai
    ollama serve
    # In another terminal, pull a model:
-   ollama pull llama3.2:1b  # or llama3.2:3b for better quality
+   ollama pull qwen2.5-coder:14b-instruct
    ```
 
 3. **Set Environment Variables (Optional):**
    ```bash
-   export OLLAMA_MODEL=llama3.2:1b
+   export OLLAMA_MODEL=qwen2.5-coder:14b-instruct
    export OLLAMA_API_URL=http://localhost:11434/api/generate
    ```
 
@@ -538,39 +630,7 @@ python scripts/eval_coverage.py --test-dir tests_generated/single --cut-module c
 - **Good coverage**: >80% line, >70% branch
 - **Poor coverage**: <50% - tests may be missing important code paths
 
-#### 4. Evaluate Mutation Testing
-
-```bash
-python scripts/eval_mutation.py --test-dir tests_generated/single --cut-module calculator
-```
-
-**What to expect:**
-
-- Runs mutmut to create mutations of the CUT
-- Tests each mutation against the test suite
-- Takes 2-10 minutes depending on module size
-- Generates JSON file: `results/mutation_calculator_single.json`
-
-**Understanding Mutation Results:**
-
-```json
-{
-  "score": 0.75, // 75% mutation score
-  "killed": 15, // 15 mutations killed (caught by tests)
-  "survived": 5, // 5 mutations survived (tests didn't catch)
-  "timeout": 0, // Mutations that timed out
-  "suspicious": 0, // Suspicious mutations
-  "skipped": 0 // Skipped mutations
-}
-```
-
-- **Mutation Score**: `killed / (killed + survived)` - higher is better
-- **Killed**: Mutations detected by tests (good - tests are effective)
-- **Survived**: Mutations not detected (bad - tests may be weak)
-- **Good score**: >70% - tests are effective at catching bugs
-- **Poor score**: <50% - tests may not be thorough enough
-
-#### 5. Evaluate Test Diversity
+#### 4. Evaluate Test Diversity
 
 ```bash
 python scripts/eval_diversity.py --test-dir tests_generated/single
@@ -603,7 +663,7 @@ python scripts/eval_diversity.py --test-dir tests_generated/single
 - **Good diversity**: >0.6 - tests cover different scenarios
 - **Poor diversity**: <0.4 - tests may be too similar/redundant
 
-#### 6. Aggregate Results
+#### 5. Aggregate Results
 
 ```bash
 python scripts/aggregate.py --results-dir results --output-file results_summary.csv
@@ -612,18 +672,17 @@ python scripts/aggregate.py --results-dir results --output-file results_summary.
 **What to expect:**
 
 - Scans `results/` directory for all JSON result files
-- Combines coverage, mutation, and diversity metrics
+- Combines coverage and diversity metrics
 - Generates CSV file: `results/results_summary.csv`
 
 **Understanding Aggregated Results:**
 
 The CSV file contains one row per (CUT, mode, metric_type) combination:
 
-| file                             | cut        | mode   | metric_type | coverage_line | coverage_branch | mutation_score | mutation_killed | mutation_survived | diversity_score |
-| -------------------------------- | ---------- | ------ | ----------- | ------------- | --------------- | -------------- | --------------- | ----------------- | --------------- |
-| coverage_calculator_single.json  | calculator | single | coverage    | 0.85          | 0.72            |                |                 |                   |                 |
-| mutation_calculator_single.json  | calculator | single | mutation    |               |                 | 0.75           | 15              | 5                 |                 |
-| diversity_calculator_single.json | calculator | single | diversity   |               |                 |                |                 |                   | 0.65            |
+| file                             | cut        | mode   | metric_type | coverage_line | coverage_branch | diversity_score |
+| -------------------------------- | ---------- | ------ | ----------- | ------------- | --------------- | --------------- |
+| coverage_calculator_single.json  | calculator | single | coverage    | 0.85          | 0.72            |                 |
+| diversity_calculator_single.json | calculator | single | diversity   |               |                 | 0.65            |
 
 **Comparing Generation Methods:**
 
@@ -636,7 +695,6 @@ Compare rows with same `cut` but different `mode`:
 **What to look for:**
 
 - Which method produces highest coverage?
-- Which method has best mutation score?
 - Which method generates most diverse tests?
 - Trade-offs: collab/competitive may take longer but produce better results
 
@@ -659,10 +717,6 @@ python scripts/run_pytest.py --test-dir tests_generated/competitive --cut-module
 python scripts/eval_coverage.py --test-dir tests_generated/single --cut-module calculator
 python scripts/eval_coverage.py --test-dir tests_generated/collab --cut-module calculator
 python scripts/eval_coverage.py --test-dir tests_generated/competitive --cut-module calculator
-
-python scripts/eval_mutation.py --test-dir tests_generated/single --cut-module calculator
-python scripts/eval_mutation.py --test-dir tests_generated/collab --cut-module calculator
-python scripts/eval_mutation.py --test-dir tests_generated/competitive --cut-module calculator
 
 python scripts/eval_diversity.py --test-dir tests_generated/single
 python scripts/eval_diversity.py --test-dir tests_generated/collab
@@ -687,15 +741,11 @@ After running the complete pipeline, you'll have:
    - Compare line/branch coverage across methods
    - Identify which method achieves best coverage
 
-3. **Mutation Reports**: `results/mutation_*_*.json`
-   - Compare mutation scores
-   - Higher scores = better test quality
-
-4. **Diversity Reports**: `results/diversity_*_*.json`
+3. **Diversity Reports**: `results/diversity_*_*.json`
    - Compare diversity scores
    - Higher diversity = more varied test scenarios
 
-5. **Aggregated Summary**: `results/results_summary.csv`
+4. **Aggregated Summary**: `results/results_summary.csv`
    - Side-by-side comparison of all metrics
    - Use to determine which generation method works best for your use case
 
@@ -716,14 +766,14 @@ After running the complete pipeline, you'll have:
 - **Solution**: Regenerate with different parameters or larger model
 - **Alternative**: Manually fix obvious errors in generated tests
 
-**Issue**: Low coverage/mutation scores
+**Issue**: Low coverage scores
 
 - **Solution**: Generate more tests or use collaborative/competitive methods
 - **Check**: Review CUT module - may need better docstrings for LLM to understand
 
 **Issue**: Evaluation scripts fail
 
-- **Solution**: Ensure dependencies installed (`pip install coverage mutmut pandas`)
+- **Solution**: Ensure dependencies installed (`pip install coverage pandas`)
 - **Check**: Verify Python version (3.8+)
 
 ### Tips for Best Results

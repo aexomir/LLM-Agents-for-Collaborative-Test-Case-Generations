@@ -345,7 +345,7 @@ def generate_single_tests(
         print(f"✓ Saved run metadata to: {metadata_file}")
 
     # Also create/overwrite a wrapper file in impl/tests so tools like
-    # pytest and mutmut can discover this suite automatically.
+    # pytest can discover this suite automatically.
     # Use the actual output directory for the import path
     tests_dir = actual_output_dir.parent.parent / "tests"
     tests_dir.mkdir(parents=True, exist_ok=True)
@@ -362,7 +362,7 @@ def generate_single_tests(
     wrapper_path = tests_dir / f"test_{cut_module}_single.py"
     wrapper_code = (
         "\"\"\"Auto-generated wrapper for single-agent tests.\n"
-        "Imports the generated tests so pytest/mutmut see them under 'tests/'.\n"
+        "Imports the generated tests so pytest see them under 'tests/'.\n"
         "\"\"\"\n\n"
         f"from {import_path} import *  # noqa: F401,F403\n"
     )

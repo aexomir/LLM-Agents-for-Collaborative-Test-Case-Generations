@@ -88,7 +88,6 @@ class ExperimentConfig:
                 config.evaluation.pytest.update(eval_data["pytest"])
             if "coverage" in eval_data:
                 config.evaluation.coverage.update(eval_data["coverage"])
-            # Mutation testing removed - ignore if present in config
             if "diversity" in eval_data:
                 config.evaluation.diversity.update(eval_data["diversity"])
         

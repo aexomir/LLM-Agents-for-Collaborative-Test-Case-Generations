@@ -138,7 +138,7 @@ class ResultManager:
         Save evaluation result.
         
         Args:
-            metric_type: Type of metric (coverage/mutation/diversity)
+            metric_type: Type of metric (coverage/diversity)
             mode: Generation mode (single/collab/competitive)
             result_file: Path to result JSON file
             metrics: Optional metrics dictionary

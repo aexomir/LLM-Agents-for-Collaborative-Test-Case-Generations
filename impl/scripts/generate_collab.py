@@ -651,7 +651,7 @@ def generate_collab_tests(
         print(f"✓ Saved run metadata to: {metadata_file}")
 
     # Also create/overwrite a wrapper file in impl/tests so tools like
-    # pytest and mutmut can discover this collab suite automatically.
+    # pytest can discover this collab suite automatically.
     tests_dir = actual_output_dir.parent.parent / "tests"
     tests_dir.mkdir(parents=True, exist_ok=True)
     
@@ -664,7 +664,7 @@ def generate_collab_tests(
     wrapper_path = tests_dir / f"test_{cut_module}_collab.py"
     wrapper_code = (
         "\"\"\"Auto-generated wrapper for collaborative tests.\n"
-        "Imports the generated tests so pytest/mutmut see them under 'tests/'.\n"
+        "Imports the generated tests so pytest see them under 'tests/'.\n"
         "\"\"\"\n\n"
         f"from {import_path} import *  # noqa: F401,F403\n"
     )

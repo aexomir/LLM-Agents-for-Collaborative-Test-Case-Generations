@@ -29,7 +29,7 @@ class ExperimentRunner:
     Coordinates:
     - Test generation (single/collab/competitive)
     - Test execution (pytest)
-    - Evaluation (coverage/mutation/diversity)
+    - Evaluation (coverage/diversity)
     - Result aggregation
     """
     
@@ -95,7 +95,6 @@ class ExperimentRunner:
             "generate_competitive.py",
             "run_pytest.py",
             "eval_coverage.py",
-            "eval_mutation.py",
             "eval_diversity.py",
             "aggregate.py",
         ]
@@ -329,8 +328,6 @@ class ExperimentRunner:
             results["coverage"] = coverage_results
             self.evaluation_results["coverage"] = coverage_results
         
-        # Mutation testing removed - not providing useful results
-        
         # Run diversity analysis
         if self.config.evaluation.diversity.get("enabled"):
             diversity_results = self._run_diversity_evaluation()
@@ -441,8 +438,6 @@ class ExperimentRunner:
                 results[mode] = result_file
         
         return results
-    
-    # Mutation testing removed - not providing useful results
     
     def _run_diversity_evaluation(self) -> Dict[str, Path]:
         """Run diversity analysis."""

@@ -29,23 +29,20 @@ def _infer_cut(name: str) -> str:
     
     We expect names like:
     - coverage_calculator_single.json
-    - mutation_calculator_collab.json
     - diversity_calculator_competitive.json
     Fallback: 'unknown'.
     """
-    m = re.search(r"(coverage|mutation|diversity)_([^_.]+)", name.lower())
+    m = re.search(r"(coverage|diversity)_([^_.]+)", name.lower())
     if m:
         return m.group(2)
     return "unknown"
 
 
 def _classify_json_metrics(data: Dict[str, Any]) -> str:
-    """Classify a JSON result file as coverage/mutation/diversity based on keys."""
+    """Classify a JSON result file as coverage/diversity based on keys."""
     keys = set(data.keys())
     if {"line", "branch"} & keys:
         return "coverage"
-    if {"score", "killed", "survived"} <= keys:
-        return "mutation"
     if {"diversity_score"} <= keys:
         return "diversity"
     # Fallback: unknown metrics
@@ -62,7 +59,6 @@ def aggregate_results(
     
     This function scans a results directory for JSON result files produced by:
     - eval_coverage.py  (coverage metrics)
-    - eval_mutation.py  (mutation testing metrics)
     - eval_diversity.py (diversity metrics)
     
     It combines them into a single table with one row per
@@ -70,7 +66,6 @@ def aggregate_results(
     
     Expected filenames (flexible in practice):
     - coverage_<cut>_<mode>.json
-    - mutation_<cut>_<mode>.json
     - diversity_<cut>_<mode>.json
     where <mode> is one of: single, collab, competitive.
     """
@@ -109,16 +104,6 @@ def aggregate_results(
             # Handle error field if present
             if "error" in data:
                 row["coverage_error"] = data.get("error")
-        elif metric_type == "mutation":
-            row["mutation_score"] = data.get("score")
-            row["mutation_killed"] = data.get("killed")
-            row["mutation_survived"] = data.get("survived")
-            row["mutation_timeout"] = data.get("timeout")
-            row["mutation_suspicious"] = data.get("suspicious")
-            row["mutation_skipped"] = data.get("skipped")
-            # Handle error field if present
-            if "error" in data:
-                row["mutation_error"] = data.get("error")
         elif metric_type == "diversity":
             # We don't know which diversity metric was used (syntactic/semantic/coverage),
             # so record all common fields and let the filename disambiguate.
@@ -143,7 +128,7 @@ def aggregate_results(
     
     if not rows:
         print(f"No JSON result files found in {results_dir}", file=sys.stderr)
-        print(f"Looking for files matching: coverage_*.json, mutation_*.json, diversity_*.json", file=sys.stderr)
+        print(f"Looking for files matching: coverage_*.json, diversity_*.json", file=sys.stderr)
         return
     
     # Print summary of what was found
