@@ -417,6 +417,10 @@ Future work should address several directions:
 
 \appendix
 
+\makeatletter
+\renewcommand{\@seccntformat}[1]{Appendix \csname the#1\endcsname. \quad}
+\makeatother
+
 \section{Implementation Details}
 \label{app:implementation}
 
