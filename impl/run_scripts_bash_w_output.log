@@ -1,0 +1,83 @@
+LLM on  feature/integration-testing via 🅒 base
+➜ python impl/scripts/run_experiments.py
+Loading configuration from: /Users/aexomir/Desktop/LLM/impl/scripts/configs/default_experiment.yaml
+[2026-01-29 03:15:31] [INFO]
+[2026-01-29 03:15:31] [INFO]  ============================================================
+[2026-01-29 03:15:31] [INFO]  Experiment: humaneval_subset_20260129_031531
+[2026-01-29 03:15:31] [INFO]  ============================================================
+[2026-01-29 03:15:31] [INFO]  CUT Module: humaneval_subset
+[2026-01-29 03:15:31] [INFO]  Number of Tests: 10
+[2026-01-29 03:15:31] [INFO]  Experiment Directory: /Users/aexomir/Desktop/LLM/results/experiments/humaneval_subset_20260129_031531
+[2026-01-29 03:15:31] [INFO]
+[2026-01-29 03:15:31] [INFO]  Validating prerequisites...
+[2026-01-29 03:15:31] [INFO]  ✓ All prerequisites validated
+[2026-01-29 03:15:31] [INFO]
+[2026-01-29 03:15:31] [INFO] [Phase: Generation] Starting generation phase: CUT module: humaneval_subset
+[2026-01-29 03:15:31] [INFO] [Phase: Generation] Running single-agent test generation...
+[2026-01-29 03:20:15] [INFO] [Phase: Generation] ✓ Single-agent generation completed: /Users/aexomir/Desktop/LLM/impl/tests_generated/single/20260129_031531
+[2026-01-29 03:20:15] [INFO] [Phase: Generation] Running collaborative test generation...
+[2026-01-29 03:23:33] [INFO] [Phase: Generation] ✓ Collaborative generation completed: /Users/aexomir/Desktop/LLM/impl/tests_generated/collab/20260129_032015
+[2026-01-29 03:23:33] [INFO] [Phase: Generation] Running competitive test generation...
+[2026-01-29 03:26:07] [INFO] [Phase: Generation] ✓ Competitive generation completed: /Users/aexomir/Desktop/LLM/impl/tests_generated/competitive/20260129_032333
+[2026-01-29 03:26:07] [INFO] [Phase: Generation] ✓ Completed generation phase: Generated tests for 3 mode(s)
+[2026-01-29 03:26:07] [INFO]
+[2026-01-29 03:26:07] [INFO] [Phase: Evaluation] Starting evaluation phase...
+[2026-01-29 03:26:07] [INFO] [Phase: Evaluation] Running pytest evaluation...
+[2026-01-29 03:26:07] [INFO] [Phase: Evaluation] Running pytest for single mode...
+[2026-01-29 03:26:07] [WARNING] [Phase: Evaluation] Some tests failed for single mode (this is OK)
+[2026-01-29 03:26:07] [INFO] [Phase: Evaluation] Running pytest for collab mode...
+[2026-01-29 03:26:08] [WARNING] [Phase: Evaluation] Some tests failed for collab mode (this is OK)
+[2026-01-29 03:26:08] [INFO] [Phase: Evaluation] Running pytest for competitive mode...
+[2026-01-29 03:26:08] [WARNING] [Phase: Evaluation] Some tests failed for competitive mode (this is OK)
+[2026-01-29 03:26:08] [INFO] [Phase: Evaluation] Running coverage evaluation...
+[2026-01-29 03:26:08] [INFO] [Phase: Evaluation] Evaluating coverage for single mode...
+[2026-01-29 03:26:08] [INFO] [Phase: Evaluation] ✓ Coverage evaluation completed for single mode
+[2026-01-29 03:26:08] [INFO] [Phase: Evaluation] Evaluating coverage for collab mode...
+[2026-01-29 03:26:09] [INFO] [Phase: Evaluation] ✓ Coverage evaluation completed for collab mode
+[2026-01-29 03:26:09] [INFO] [Phase: Evaluation] Evaluating coverage for competitive mode...
+[2026-01-29 03:26:09] [INFO] [Phase: Evaluation] ✓ Coverage evaluation completed for competitive mode
+[2026-01-29 03:26:09] [INFO] [Phase: Evaluation] Running diversity analysis...
+[2026-01-29 03:26:09] [INFO] [Phase: Evaluation] Evaluating diversity for single mode...
+[2026-01-29 03:26:09] [INFO] [Phase: Evaluation] ✓ Diversity analysis completed for single mode
+[2026-01-29 03:26:09] [INFO] [Phase: Evaluation] Evaluating diversity for collab mode...
+[2026-01-29 03:26:09] [INFO] [Phase: Evaluation] ✓ Diversity analysis completed for collab mode
+[2026-01-29 03:26:09] [INFO] [Phase: Evaluation] Evaluating diversity for competitive mode...
+[2026-01-29 03:26:09] [INFO] [Phase: Evaluation] ✓ Diversity analysis completed for competitive mode
+[2026-01-29 03:26:09] [INFO] [Phase: Evaluation] ✓ Completed evaluation phase: Completed 2 evaluation type(s)
+[2026-01-29 03:26:09] [INFO]
+[2026-01-29 03:26:09] [INFO] [Phase: Aggregation] Starting aggregation phase...
+[2026-01-29 03:26:09] [INFO] [Phase: Aggregation] Aggregating results in csv format...
+[2026-01-29 03:26:10] [INFO] [Phase: Aggregation] ✓ Aggregation completed: /Users/aexomir/Desktop/LLM/results/experiments/humaneval_subset_20260129_031531/reports/results_summary.csv
+[2026-01-29 03:26:10] [INFO] [Phase: Aggregation] Aggregating results in html format...
+[2026-01-29 03:26:11] [INFO] [Phase: Aggregation] ✓ Aggregation completed: /Users/aexomir/Desktop/LLM/results/experiments/humaneval_subset_20260129_031531/reports/results_summary.html
+[2026-01-29 03:26:11] [INFO] [Phase: Aggregation] ✓ Completed aggregation phase: Generated 2 aggregated result file(s)
+[2026-01-29 03:26:11] [INFO]
+[2026-01-29 03:26:11] [INFO]  Generating experiment report...
+[2026-01-29 03:26:11] [INFO]  ✓ Experiment report generated: /Users/aexomir/Desktop/LLM/results/experiments/humaneval_subset_20260129_031531/reports/experiment_report.md
+[2026-01-29 03:26:11] [INFO]  Validating results...
+[2026-01-29 03:26:11] [INFO]  ✓ All results validated successfully
+[2026-01-29 03:26:11] [INFO]
+[2026-01-29 03:26:11] [INFO]  ============================================================
+[2026-01-29 03:26:11] [INFO]  Experiment Complete
+[2026-01-29 03:26:11] [INFO]  ============================================================
+[2026-01-29 03:26:11] [INFO]  Experiment ID: humaneval_subset_20260129_031531
+[2026-01-29 03:26:11] [INFO]  Results Directory: /Users/aexomir/Desktop/LLM/results/experiments/humaneval_subset_20260129_031531
+[2026-01-29 03:26:11] [INFO]  Log File: /Users/aexomir/Desktop/LLM/results/experiments/humaneval_subset_20260129_031531/logs/experiment.log
+[2026-01-29 03:26:11] [INFO]  Report: /Users/aexomir/Desktop/LLM/results/experiments/humaneval_subset_20260129_031531/reports/experiment_report.md
+[2026-01-29 03:26:11] [INFO]
+[2026-01-29 03:26:11] [INFO]  Result Files:
+[2026-01-29 03:26:11] [INFO]    Generation Results:
+[2026-01-29 03:26:11] [INFO]      single: /Users/aexomir/Desktop/LLM/impl/tests_generated/single/20260129_031531
+[2026-01-29 03:26:11] [INFO]      collab: /Users/aexomir/Desktop/LLM/impl/tests_generated/collab/20260129_032015
+[2026-01-29 03:26:11] [INFO]      competitive: /Users/aexomir/Desktop/LLM/impl/tests_generated/competitive/20260129_032333
+[2026-01-29 03:26:11] [INFO]    Evaluation Results:
+[2026-01-29 03:26:11] [INFO]      coverage:
+[2026-01-29 03:26:11] [INFO]        single: /Users/aexomir/Desktop/LLM/results/experiments/humaneval_subset_20260129_031531/metrics/coverage_humaneval_subset_single.json
+[2026-01-29 03:26:11] [INFO]        collab: /Users/aexomir/Desktop/LLM/results/experiments/humaneval_subset_20260129_031531/metrics/coverage_humaneval_subset_collab.json
+[2026-01-29 03:26:11] [INFO]        competitive: /Users/aexomir/Desktop/LLM/results/experiments/humaneval_subset_20260129_031531/metrics/coverage_humaneval_subset_competitive.json
+[2026-01-29 03:26:11] [INFO]      diversity:
+[2026-01-29 03:26:11] [INFO]        single: /Users/aexomir/Desktop/LLM/results/experiments/humaneval_subset_20260129_031531/metrics/diversity_humaneval_subset_single.json
+[2026-01-29 03:26:11] [INFO]        collab: /Users/aexomir/Desktop/LLM/results/experiments/humaneval_subset_20260129_031531/metrics/diversity_humaneval_subset_collab.json
+[2026-01-29 03:26:11] [INFO]        competitive: /Users/aexomir/Desktop/LLM/results/experiments/humaneval_subset_20260129_031531/metrics/diversity_humaneval_subset_competitive.json
+[2026-01-29 03:26:11] [INFO]
+[2026-01-29 03:26:11] [INFO]  ✓ Experiment completed successfully!
