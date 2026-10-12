@@ -18,3 +18,18 @@ __pycache__/
 **/.venv/
 
 **/*.egg-info/**
+
+# Coverage data
+.coverage
+
+# macOS folder icon files ("Icon\r")
+Icon*
+
+# Build output
+build/
+
+# Logs
+*.log
+
+# Generated test runs (recreated by impl/scripts/generate_*.py)
+impl/tests_generated/
